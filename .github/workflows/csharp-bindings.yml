@@ -1,0 +1,42 @@
+on:
+  push:
+  pull_request:
+
+name: C# Bindings
+
+jobs:
+  build-csharp-bindings:
+    name: "Build C# Bindings (${{ matrix.rid }})"
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            native-lib: target/release/ctaffy.dll
+          - os: ubuntu-latest
+            rid: linux-x64
+            native-lib: target/release/libctaffy.so
+          - os: macos-latest
+            rid: osx-arm64
+            native-lib: target/release/libctaffy.dylib
+          - os: macos-13
+            rid: osx-x64
+            native-lib: target/release/libctaffy.dylib
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+      - name: Build ctaffy
+        run: cargo build --release -p ctaffy
+      - name: Build Taffy.dll
+        run: dotnet build bindings/csharp/include/Taffy.csproj --configuration Release
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaffySharp-${{ matrix.rid }}
+          path: |
+            ${{ matrix.native-lib }}
+            bindings/csharp/include/bin/Release/net9.0/Taffy.dll
