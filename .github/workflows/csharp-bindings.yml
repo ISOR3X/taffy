@@ -36,4 +36,4 @@ jobs:
           name: TaffySharp-${{ matrix.rid }}
           path: |
             ${{ matrix.native-lib }}
-            bindings/csharp/include/bin/Release/net9.0/Taffy.dll
+            bindings/csharp/include/bin/Release/net4.7.2/Taffy.dll

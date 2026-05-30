@@ -10,6 +10,14 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!-- Required to build net472 on non-Windows CI agents -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <!-- Exclude subdirectory projects from this library's compilation -->
   <ItemGroup>
     <Compile Remove="benchmarks/**" />
