@@ -16,6 +16,9 @@ namespace Taffy
 
 
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate TaffySize TaffyTree_SetNodeContext_measure_function_delegate(TaffyMeasureMode width_measure_mode, float width, TaffyMeasureMode height_measure_mode, float height, void* context);
+
 
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace Taffy
         ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_SetNodeContext", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyTree_SetNodeContext(TaffyNativeTree* raw_tree, TaffyNodeId node_id, delegate* unmanaged[Cdecl]<TaffyMeasureMode, float, TaffyMeasureMode, float, void*, TaffySize> measure_function, void* context);
+        public static extern TaffyReturnCode TaffyTree_SetNodeContext(TaffyNativeTree* raw_tree, TaffyNodeId node_id, TaffyTree_SetNodeContext_measure_function_delegate measure_function, void* context);
 
         /// <summary>
         ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
@@ -82,13 +85,13 @@ namespace Taffy
         ///  Returns the number of children of the given node. Returns 0 if the node or tree pointer is invalid.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_ChildCount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern nuint TaffyTree_ChildCount(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id);
+        public static extern System.UIntPtr TaffyTree_ChildCount(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id);
 
         /// <summary>
         ///  Returns the child NodeId at the given index under parent_node_id
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_ChildAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyNodeIdResult TaffyTree_ChildAt(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, nuint child_index);
+        public static extern TaffyNodeIdResult TaffyTree_ChildAt(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, System.UIntPtr child_index);
 
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetAspectRatio", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float TaffyStyle_GetAspectRatio(TaffyStyle* raw_style);
@@ -130,73 +133,73 @@ namespace Taffy
         ///  Get the number of tracks in grid_template_columns
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridTemplateColumnsCount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern nuint TaffyStyle_GetGridTemplateColumnsCount(TaffyStyle* raw_style);
+        public static extern System.UIntPtr TaffyStyle_GetGridTemplateColumnsCount(TaffyStyle* raw_style);
 
         /// <summary>
         ///  Get a track from grid_template_columns at the given index. Returns auto/auto for Repeat components.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridTemplateColumnsAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridTemplateColumnsAt(TaffyStyle* raw_style, nuint index);
+        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridTemplateColumnsAt(TaffyStyle* raw_style, System.UIntPtr index);
 
         /// <summary>
         ///  Set grid_template_columns from a flat array of Single tracks
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_SetGridTemplateColumns", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyStyle_SetGridTemplateColumns(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, nuint count);
+        public static extern TaffyReturnCode TaffyStyle_SetGridTemplateColumns(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, System.UIntPtr count);
 
         /// <summary>
         ///  Get the number of tracks in grid_template_rows
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridTemplateRowsCount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern nuint TaffyStyle_GetGridTemplateRowsCount(TaffyStyle* raw_style);
+        public static extern System.UIntPtr TaffyStyle_GetGridTemplateRowsCount(TaffyStyle* raw_style);
 
         /// <summary>
         ///  Get a track from grid_template_rows at the given index. Returns auto/auto for Repeat components.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridTemplateRowsAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridTemplateRowsAt(TaffyStyle* raw_style, nuint index);
+        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridTemplateRowsAt(TaffyStyle* raw_style, System.UIntPtr index);
 
         /// <summary>
         ///  Set grid_template_rows from a flat array of Single tracks
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_SetGridTemplateRows", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyStyle_SetGridTemplateRows(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, nuint count);
+        public static extern TaffyReturnCode TaffyStyle_SetGridTemplateRows(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, System.UIntPtr count);
 
         /// <summary>
         ///  Get the number of tracks in grid_auto_columns
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridAutoColumnsCount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern nuint TaffyStyle_GetGridAutoColumnsCount(TaffyStyle* raw_style);
+        public static extern System.UIntPtr TaffyStyle_GetGridAutoColumnsCount(TaffyStyle* raw_style);
 
         /// <summary>
         ///  Get a track from grid_auto_columns at the given index
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridAutoColumnsAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridAutoColumnsAt(TaffyStyle* raw_style, nuint index);
+        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridAutoColumnsAt(TaffyStyle* raw_style, System.UIntPtr index);
 
         /// <summary>
         ///  Set grid_auto_columns from a flat array of tracks
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_SetGridAutoColumns", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyStyle_SetGridAutoColumns(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, nuint count);
+        public static extern TaffyReturnCode TaffyStyle_SetGridAutoColumns(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, System.UIntPtr count);
 
         /// <summary>
         ///  Get the number of tracks in grid_auto_rows
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridAutoRowsCount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern nuint TaffyStyle_GetGridAutoRowsCount(TaffyStyle* raw_style);
+        public static extern System.UIntPtr TaffyStyle_GetGridAutoRowsCount(TaffyStyle* raw_style);
 
         /// <summary>
         ///  Get a track from grid_auto_rows at the given index
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetGridAutoRowsAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridAutoRowsAt(TaffyStyle* raw_style, nuint index);
+        public static extern TaffyTrackSizingFunction TaffyStyle_GetGridAutoRowsAt(TaffyStyle* raw_style, System.UIntPtr index);
 
         /// <summary>
         ///  Set grid_auto_rows from a flat array of tracks
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyStyle_SetGridAutoRows", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyStyle_SetGridAutoRows(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, nuint count);
+        public static extern TaffyReturnCode TaffyStyle_SetGridAutoRows(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, System.UIntPtr count);
 
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetDisplay", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyDisplay TaffyStyle_GetDisplay(TaffyStyle* _raw_style);

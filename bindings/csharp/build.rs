@@ -11,6 +11,8 @@ fn main() {
         .csharp_namespace("Taffy")
         .csharp_class_name("NativeMethods")
         .csharp_class_accessibility("public")
+        .csharp_use_nint_types(false)
+        .csharp_use_function_pointer(false)
         .csharp_type_rename(|name| {
             if name == "TaffyTree" { "TaffyNativeTree".to_string() } else { name.to_string() }
         })
