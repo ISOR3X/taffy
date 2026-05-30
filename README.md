@@ -1,3 +1,6 @@
+> [!WARNING]
+> This fork continues work from the [WIP: C bindings](https://github.com/DioxusLabs/taffy/pull/404) PR by syncing it with the latest taffy changes. It also adds C# bindings through [csbindgen](https://github.com/Cysharp/csbindgen/). Contains AI-written code.
+
 <!-- markdownlint-disable-next-line MD041 -->
 <p>
 <picture>
