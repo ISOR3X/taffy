@@ -3,6 +3,104 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+// Sets the layout used for the children of this node
+//
+// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
+typedef enum TaffyDisplay {
+  // The children will follow the block layout algorithm
+  TAFFY_DISPLAY_BLOCK,
+  // The children will follow the flexbox layout algorithm
+  TAFFY_DISPLAY_FLEX,
+  // The children will follow the CSS Grid layout algorithm
+  TAFFY_DISPLAY_GRID,
+  // The children will not be laid out, and will follow absolute positioning
+  TAFFY_DISPLAY_NONE,
+} TaffyDisplay;
+
+typedef enum TaffyReturnCode {
+  // Operation suceeded
+  TAFFY_RETURN_CODE_OK,
+  // The style pointer passed was null
+  TAFFY_RETURN_CODE_NULL_STYLE_POINTER,
+  // The tree pointer passed was null
+  TAFFY_RETURN_CODE_NULL_TREE_POINTER,
+  // The node referenced by the node id passed does not exist
+  TAFFY_RETURN_CODE_INVALID_NODE_ID,
+  // An enum value was specified that was outside the range of valid value for this enum
+  TAFFY_RETURN_CODE_INVALID_ENUM_VALUE,
+  // A Points unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_NONE,
+  // A Points unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_POINTS,
+  // A Percent unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_PERCENT,
+  // A MinContent unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_MIN_CONTENT,
+  // A MaxContent unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_MAX_CONTENT,
+  // A FitContentPx unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_FIT_CONTENT_PX,
+  // A FitContentPercent unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_FIT_CONTENT_PERCENT,
+  // An Auto unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_AUTO,
+  // An Fr unit was specified but is not valid in this context
+  TAFFY_RETURN_CODE_INVALID_FR,
+  // A NaN value was specified but is not valid in this context
+  TAFFY_RETURN_CODE_UNEXPECTED_NA_N,
+  // A infinite value was specified but is not valid in this context
+  TAFFY_RETURN_CODE_UNEXPECTED_INFINITY,
+  // A negative value was specified but is not valid in this context
+  TAFFY_RETURN_CODE_UNEXPECTED_NEGATIVE,
+} TaffyReturnCode;
+
+// The positioning strategy for this item.
+//
+// This controls both how the origin is determined for the [`Style::position`] field,
+// and whether or not the item will be controlled by flexbox's layout algorithm.
+//
+// WARNING: this enum follows the behavior of [CSS's `position` property](https://developer.mozilla.org/en-US/docs/Web/CSS/position),
+// which can be unintuitive.
+//
+// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
+typedef enum TaffyPosition {
+  // The offset is computed relative to the final position given by the layout algorithm.
+  // Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
+  TAFFY_POSITION_RELATIVE,
+  // The offset is computed relative to this item's closest positioned ancestor, if any.
+  // Otherwise, it is placed relative to the origin.
+  // No space is created for the item in the page layout, and its size will not be altered.
+  //
+  // WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
+  TAFFY_POSITION_ABSOLUTE,
+} TaffyPosition;
+
+// How children overflowing their container should affect layout
+//
+// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
+// be displayed anyway, be clipped, or trigger the container to become a scroll container. However it also has secondary effects on layout,
+// the main ones being:
+//
+//   - The automatic minimum size Flexbox/CSS Grid items with non-`Visible` overflow is `0` rather than being content based
+//   - `Overflow::Scroll` nodes have space in the layout reserved for a scrollbar (width controlled by the `scrollbar_width` property)
+//
+// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting. The amount of space reserved for
+// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Scroll` behaves identically to `Hidden`.
+//
+// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
+typedef enum TaffyOverflow {
+  // The automatic minimum size of this node as a flexbox/grid item should be based on the size of it's content.
+  TAFFY_OVERFLOW_VISIBLE,
+  // The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
+  // Content that overflows this node should *not* contribute to the scroll region of its parent.
+  TAFFY_OVERFLOW_CLIP,
+  // The automatic minimum size of this node as a flexbox/grid item should be `0`.
+  TAFFY_OVERFLOW_HIDDEN,
+  // The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
+  // for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
+  TAFFY_OVERFLOW_SCROLL,
+} TaffyOverflow;
+
 // Sets the distribution of space between and around content items
 // For Flexbox it controls alignment in the cross axis
 // For Grid it controls alignment in the block axis
@@ -72,37 +170,6 @@ typedef enum TaffyAlignItems {
   TAFFY_ALIGN_ITEMS_STRETCH,
 } TaffyAlignItems;
 
-// Sets the layout used for the children of this node
-//
-// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
-typedef enum TaffyDisplay {
-  // The children will follow the block layout algorithm
-  TAFFY_DISPLAY_BLOCK,
-  // The children will follow the flexbox layout algorithm
-  TAFFY_DISPLAY_FLEX,
-  // The children will follow the CSS Grid layout algorithm
-  TAFFY_DISPLAY_GRID,
-  // The children will not be laid out, and will follow absolute positioning
-  TAFFY_DISPLAY_NONE,
-} TaffyDisplay;
-
-typedef enum TaffyEdge {
-  // The top edge of the box
-  TAFFY_EDGE_TOP,
-  // The bottom edge of the box
-  TAFFY_EDGE_BOTTOM,
-  // The left edge of the box
-  TAFFY_EDGE_LEFT,
-  // The right edge of the box
-  TAFFY_EDGE_RIGHT,
-  // Both the top and bottom edges of the box
-  TAFFY_EDGE_VERTICAL,
-  // Both the left and right edges of the box
-  TAFFY_EDGE_HORIZONTAL,
-  // All four edges of the box
-  TAFFY_EDGE_ALL,
-} TaffyEdge;
-
 // The direction of the flexbox layout main axis.
 //
 // There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
@@ -166,101 +233,6 @@ typedef enum TaffyGridAutoFlow {
   TAFFY_GRID_AUTO_FLOW_COLUMN_DENSE,
 } TaffyGridAutoFlow;
 
-typedef enum TaffyMeasureMode {
-  // A none value (used to unset optional fields)
-  TAFFY_MEASURE_MODE_EXACT,
-  // Fixed Length (pixel) value
-  TAFFY_MEASURE_MODE_FIT_CONTENT,
-  // Percentage value
-  TAFFY_MEASURE_MODE_MIN_CONTENT,
-  // Min-content size
-  TAFFY_MEASURE_MODE_MAX_CONTENT,
-} TaffyMeasureMode;
-
-// How children overflowing their container should affect layout
-//
-// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
-// be displayed anyway, be clipped, or trigger the container to become a scroll container. However it also has secondary effects on layout,
-// the main ones being:
-//
-//   - The automatic minimum size Flexbox/CSS Grid items with non-`Visible` overflow is `0` rather than being content based
-//   - `Overflow::Scroll` nodes have space in the layout reserved for a scrollbar (width controlled by the `scrollbar_width` property)
-//
-// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting. The amount of space reserved for
-// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Scroll` behaves identically to `Hidden`.
-//
-// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
-typedef enum TaffyOverflow {
-  // The automatic minimum size of this node as a flexbox/grid item should be based on the size of it's content.
-  TAFFY_OVERFLOW_VISIBLE,
-  // The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
-  // Content that overflows this node should *not* contribute to the scroll region of its parent.
-  TAFFY_OVERFLOW_CLIP,
-  // The automatic minimum size of this node as a flexbox/grid item should be `0`.
-  TAFFY_OVERFLOW_HIDDEN,
-  // The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
-  // for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
-  TAFFY_OVERFLOW_SCROLL,
-} TaffyOverflow;
-
-// The positioning strategy for this item.
-//
-// This controls both how the origin is determined for the [`Style::position`] field,
-// and whether or not the item will be controlled by flexbox's layout algorithm.
-//
-// WARNING: this enum follows the behavior of [CSS's `position` property](https://developer.mozilla.org/en-US/docs/Web/CSS/position),
-// which can be unintuitive.
-//
-// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
-typedef enum TaffyPosition {
-  // The offset is computed relative to the final position given by the layout algorithm.
-  // Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
-  TAFFY_POSITION_RELATIVE,
-  // The offset is computed relative to this item's closest positioned ancestor, if any.
-  // Otherwise, it is placed relative to the origin.
-  // No space is created for the item in the page layout, and its size will not be altered.
-  //
-  // WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
-  TAFFY_POSITION_ABSOLUTE,
-} TaffyPosition;
-
-typedef enum TaffyReturnCode {
-  // Operation suceeded
-  TAFFY_RETURN_CODE_OK,
-  // The style pointer passed was null
-  TAFFY_RETURN_CODE_NULL_STYLE_POINTER,
-  // The tree pointer passed was null
-  TAFFY_RETURN_CODE_NULL_TREE_POINTER,
-  // The node referenced by the node id passed does not exist
-  TAFFY_RETURN_CODE_INVALID_NODE_ID,
-  // An enum value was specified that was outside the range of valid value for this enum
-  TAFFY_RETURN_CODE_INVALID_ENUM_VALUE,
-  // A Points unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_NONE,
-  // A Points unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_POINTS,
-  // A Percent unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_PERCENT,
-  // A MinContent unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_MIN_CONTENT,
-  // A MaxContent unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_MAX_CONTENT,
-  // A FitContentPx unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_FIT_CONTENT_PX,
-  // A FitContentPercent unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_FIT_CONTENT_PERCENT,
-  // An Auto unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_AUTO,
-  // An Fr unit was specified but is not valid in this context
-  TAFFY_RETURN_CODE_INVALID_FR,
-  // A NaN value was specified but is not valid in this context
-  TAFFY_RETURN_CODE_UNEXPECTED_NA_N,
-  // A infinite value was specified but is not valid in this context
-  TAFFY_RETURN_CODE_UNEXPECTED_INFINITY,
-  // A negative value was specified but is not valid in this context
-  TAFFY_RETURN_CODE_UNEXPECTED_NEGATIVE,
-} TaffyReturnCode;
-
 typedef enum TaffyUnit {
   // A none value (used to unset optional fields)
   TAFFY_UNIT_NONE,
@@ -282,6 +254,34 @@ typedef enum TaffyUnit {
   TAFFY_UNIT_FR,
 } TaffyUnit;
 
+typedef enum TaffyEdge {
+  // The top edge of the box
+  TAFFY_EDGE_TOP,
+  // The bottom edge of the box
+  TAFFY_EDGE_BOTTOM,
+  // The left edge of the box
+  TAFFY_EDGE_LEFT,
+  // The right edge of the box
+  TAFFY_EDGE_RIGHT,
+  // Both the top and bottom edges of the box
+  TAFFY_EDGE_VERTICAL,
+  // Both the left and right edges of the box
+  TAFFY_EDGE_HORIZONTAL,
+  // All four edges of the box
+  TAFFY_EDGE_ALL,
+} TaffyEdge;
+
+typedef enum TaffyMeasureMode {
+  // A none value (used to unset optional fields)
+  TAFFY_MEASURE_MODE_EXACT,
+  // Fixed Length (pixel) value
+  TAFFY_MEASURE_MODE_FIT_CONTENT,
+  // Percentage value
+  TAFFY_MEASURE_MODE_MIN_CONTENT,
+  // Min-content size
+  TAFFY_MEASURE_MODE_MAX_CONTENT,
+} TaffyMeasureMode;
+
 typedef struct TaffyStyle TaffyStyle;
 
 typedef struct TaffyTree TaffyTree;
@@ -302,6 +302,16 @@ typedef struct TaffyGridPlacement {
   int16_t end;
   uint16_t span;
 } TaffyGridPlacement;
+
+// Track sizing function for CSS Grid layout.
+//
+// Corresponds to `TrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>` in Taffy.
+// The `min` field is the minimum sizing function and `max` is the maximum sizing function.
+// Both are encoded as `TaffyDimension`; note that `Fr` and `FitContent*` are invalid for `min`.
+typedef struct TaffyTrackSizingFunction {
+  struct TaffyDimension min;
+  struct TaffyDimension max;
+} TaffyTrackSizingFunction;
 
 typedef struct TaffyTree *TaffyTreeOwnedRef;
 
@@ -339,10 +349,10 @@ typedef struct TaffyLayout {
   float height;
 } TaffyLayout;
 
-typedef struct TaffyResult_TaffyLayout {
+typedef struct TaffyLayoutResult {
   enum TaffyReturnCode return_code;
   struct TaffyLayout value;
-} TaffyResult_TaffyLayout;
+} TaffyLayoutResult;
 
 typedef const struct TaffyTree *TaffyTreeConstRef;
 
@@ -533,6 +543,50 @@ struct TaffyGridPlacement TaffyStyle_GetGridRow(TaffyStyleMutRef raw_style);
 // Set grid item's row placement
 enum TaffyReturnCode TaffyStyle_SetGridRow(TaffyStyleMutRef raw_style, struct TaffyGridPlacement placement);
 
+// Get the number of tracks in grid_template_columns
+uintptr_t TaffyStyle_GetGridTemplateColumnsCount(TaffyStyleConstRef raw_style);
+
+// Get a track from grid_template_columns at the given index. Returns auto/auto for Repeat components.
+struct TaffyTrackSizingFunction TaffyStyle_GetGridTemplateColumnsAt(TaffyStyleConstRef raw_style, uintptr_t index);
+
+// Set grid_template_columns from a flat array of Single tracks
+enum TaffyReturnCode TaffyStyle_SetGridTemplateColumns(TaffyStyleMutRef raw_style,
+                                                       const struct TaffyTrackSizingFunction *tracks,
+                                                       uintptr_t count);
+
+// Get the number of tracks in grid_template_rows
+uintptr_t TaffyStyle_GetGridTemplateRowsCount(TaffyStyleConstRef raw_style);
+
+// Get a track from grid_template_rows at the given index. Returns auto/auto for Repeat components.
+struct TaffyTrackSizingFunction TaffyStyle_GetGridTemplateRowsAt(TaffyStyleConstRef raw_style, uintptr_t index);
+
+// Set grid_template_rows from a flat array of Single tracks
+enum TaffyReturnCode TaffyStyle_SetGridTemplateRows(TaffyStyleMutRef raw_style,
+                                                    const struct TaffyTrackSizingFunction *tracks,
+                                                    uintptr_t count);
+
+// Get the number of tracks in grid_auto_columns
+uintptr_t TaffyStyle_GetGridAutoColumnsCount(TaffyStyleConstRef raw_style);
+
+// Get a track from grid_auto_columns at the given index
+struct TaffyTrackSizingFunction TaffyStyle_GetGridAutoColumnsAt(TaffyStyleConstRef raw_style, uintptr_t index);
+
+// Set grid_auto_columns from a flat array of tracks
+enum TaffyReturnCode TaffyStyle_SetGridAutoColumns(TaffyStyleMutRef raw_style,
+                                                   const struct TaffyTrackSizingFunction *tracks,
+                                                   uintptr_t count);
+
+// Get the number of tracks in grid_auto_rows
+uintptr_t TaffyStyle_GetGridAutoRowsCount(TaffyStyleConstRef raw_style);
+
+// Get a track from grid_auto_rows at the given index
+struct TaffyTrackSizingFunction TaffyStyle_GetGridAutoRowsAt(TaffyStyleConstRef raw_style, uintptr_t index);
+
+// Set grid_auto_rows from a flat array of tracks
+enum TaffyReturnCode TaffyStyle_SetGridAutoRows(TaffyStyleMutRef raw_style,
+                                                const struct TaffyTrackSizingFunction *tracks,
+                                                uintptr_t count);
+
 // Create a TaffyTree instance
 TaffyTreeOwnedRef TaffyTree_New(void);
 
@@ -569,8 +623,16 @@ enum TaffyReturnCode TaffyTree_SetNodeContext(TaffyTreeMutRef raw_tree,
                                               void *context);
 
 // Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
-struct TaffyResult_TaffyLayout TaffyTree_GetLayout(TaffyTreeConstRef raw_tree, struct TaffyNodeId node_id);
+struct TaffyLayoutResult TaffyTree_GetLayout(TaffyTreeConstRef raw_tree, struct TaffyNodeId node_id);
+
+// Returns the number of children of the given node. Returns 0 if the node or tree pointer is invalid.
+uintptr_t TaffyTree_ChildCount(TaffyTreeConstRef raw_tree, struct TaffyNodeId parent_node_id);
+
+// Returns the child NodeId at the given index under parent_node_id
+struct TaffyNodeIdResult TaffyTree_ChildAt(TaffyTreeConstRef raw_tree,
+                                           struct TaffyNodeId parent_node_id,
+                                           uintptr_t child_index);
 
 #ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+}  // extern "C"
+#endif  // __cplusplus

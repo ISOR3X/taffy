@@ -3,7 +3,7 @@
 use super::{
     debug_assert_non_null, TaffyAlignContent, TaffyAlignItems, TaffyDimension, TaffyDisplay, TaffyEdge,
     TaffyFlexDirection, TaffyFlexWrap, TaffyGridAutoFlow, TaffyGridPlacement, TaffyOverflow, TaffyPosition,
-    TaffyReturnCode, TaffyStyleConstRef, TaffyStyleMutRef, TaffyUnit,
+    TaffyReturnCode, TaffyStyleConstRef, TaffyStyleMutRef, TaffyTrackSizingFunction, TaffyUnit,
 };
 use taffy::prelude as core;
 
@@ -333,4 +333,182 @@ pub unsafe extern "C" fn TaffyStyle_SetGridRow(
     placement: TaffyGridPlacement,
 ) -> TaffyReturnCode {
     with_style_mut!(raw_style, style, style.grid_row = placement.into())
+}
+
+/* Grid template columns */
+
+/// Get the number of tracks in grid_template_columns
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridTemplateColumnsCount(raw_style: TaffyStyleConstRef) -> usize {
+    get_style!(raw_style, style, style.grid_template_columns.len())
+}
+
+/// Get a track from grid_template_columns at the given index. Returns auto/auto for Repeat components.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridTemplateColumnsAt(
+    raw_style: TaffyStyleConstRef,
+    index: usize,
+) -> TaffyTrackSizingFunction {
+    get_style!(raw_style, style, {
+        style.grid_template_columns.get(index).map_or(TaffyTrackSizingFunction::default(), |component| match component {
+            core::GridTemplateComponent::Single(track) => (*track).into(),
+            core::GridTemplateComponent::Repeat(_) => TaffyTrackSizingFunction::default(),
+        })
+    })
+}
+
+/// Set grid_template_columns from a flat array of Single tracks
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_SetGridTemplateColumns(
+    raw_style: TaffyStyleMutRef,
+    tracks: *const TaffyTrackSizingFunction,
+    count: usize,
+) -> TaffyReturnCode {
+    with_style_mut!(raw_style, style, {
+        style.grid_template_columns.clear();
+        if !tracks.is_null() {
+            let tracks_slice = std::slice::from_raw_parts(tracks, count);
+            for &track in tracks_slice {
+                match core::TrackSizingFunction::try_from(track) {
+                    Ok(tsf) => style.grid_template_columns.push(core::GridTemplateComponent::Single(tsf)),
+                    Err(err) => return err,
+                }
+            }
+        }
+    })
+}
+
+/* Grid template rows */
+
+/// Get the number of tracks in grid_template_rows
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridTemplateRowsCount(raw_style: TaffyStyleConstRef) -> usize {
+    get_style!(raw_style, style, style.grid_template_rows.len())
+}
+
+/// Get a track from grid_template_rows at the given index. Returns auto/auto for Repeat components.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridTemplateRowsAt(
+    raw_style: TaffyStyleConstRef,
+    index: usize,
+) -> TaffyTrackSizingFunction {
+    get_style!(raw_style, style, {
+        style.grid_template_rows.get(index).map_or(TaffyTrackSizingFunction::default(), |component| match component {
+            core::GridTemplateComponent::Single(track) => (*track).into(),
+            core::GridTemplateComponent::Repeat(_) => TaffyTrackSizingFunction::default(),
+        })
+    })
+}
+
+/// Set grid_template_rows from a flat array of Single tracks
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_SetGridTemplateRows(
+    raw_style: TaffyStyleMutRef,
+    tracks: *const TaffyTrackSizingFunction,
+    count: usize,
+) -> TaffyReturnCode {
+    with_style_mut!(raw_style, style, {
+        style.grid_template_rows.clear();
+        if !tracks.is_null() {
+            let tracks_slice = std::slice::from_raw_parts(tracks, count);
+            for &track in tracks_slice {
+                match core::TrackSizingFunction::try_from(track) {
+                    Ok(tsf) => style.grid_template_rows.push(core::GridTemplateComponent::Single(tsf)),
+                    Err(err) => return err,
+                }
+            }
+        }
+    })
+}
+
+/* Grid auto columns */
+
+/// Get the number of tracks in grid_auto_columns
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridAutoColumnsCount(raw_style: TaffyStyleConstRef) -> usize {
+    get_style!(raw_style, style, style.grid_auto_columns.len())
+}
+
+/// Get a track from grid_auto_columns at the given index
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridAutoColumnsAt(
+    raw_style: TaffyStyleConstRef,
+    index: usize,
+) -> TaffyTrackSizingFunction {
+    get_style!(raw_style, style, {
+        style.grid_auto_columns.get(index).copied().map_or(TaffyTrackSizingFunction::default(), Into::into)
+    })
+}
+
+/// Set grid_auto_columns from a flat array of tracks
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_SetGridAutoColumns(
+    raw_style: TaffyStyleMutRef,
+    tracks: *const TaffyTrackSizingFunction,
+    count: usize,
+) -> TaffyReturnCode {
+    with_style_mut!(raw_style, style, {
+        style.grid_auto_columns.clear();
+        if !tracks.is_null() {
+            let tracks_slice = std::slice::from_raw_parts(tracks, count);
+            for &track in tracks_slice {
+                match core::TrackSizingFunction::try_from(track) {
+                    Ok(tsf) => style.grid_auto_columns.push(tsf),
+                    Err(err) => return err,
+                }
+            }
+        }
+    })
+}
+
+/* Grid auto rows */
+
+/// Get the number of tracks in grid_auto_rows
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridAutoRowsCount(raw_style: TaffyStyleConstRef) -> usize {
+    get_style!(raw_style, style, style.grid_auto_rows.len())
+}
+
+/// Get a track from grid_auto_rows at the given index
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_GetGridAutoRowsAt(
+    raw_style: TaffyStyleConstRef,
+    index: usize,
+) -> TaffyTrackSizingFunction {
+    get_style!(raw_style, style, {
+        style.grid_auto_rows.get(index).copied().map_or(TaffyTrackSizingFunction::default(), Into::into)
+    })
+}
+
+/// Set grid_auto_rows from a flat array of tracks
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyStyle_SetGridAutoRows(
+    raw_style: TaffyStyleMutRef,
+    tracks: *const TaffyTrackSizingFunction,
+    count: usize,
+) -> TaffyReturnCode {
+    with_style_mut!(raw_style, style, {
+        style.grid_auto_rows.clear();
+        if !tracks.is_null() {
+            let tracks_slice = std::slice::from_raw_parts(tracks, count);
+            for &track in tracks_slice {
+                match core::TrackSizingFunction::try_from(track) {
+                    Ok(tsf) => style.grid_auto_rows.push(tsf),
+                    Err(err) => return err,
+                }
+            }
+        }
+    })
 }

@@ -303,3 +303,35 @@ pub unsafe extern "C" fn TaffyTree_GetLayout(
         });
     })
 }
+
+// -------------------------------------------------
+// Child access
+// -------------------------------------------------
+
+/// Returns the number of children of the given node. Returns 0 if the node or tree pointer is invalid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_ChildCount(
+    raw_tree: TaffyTreeConstRef,
+    parent_node_id: TaffyNodeId,
+) -> usize {
+    if raw_tree.is_null() {
+        return 0;
+    }
+    let tree = &*raw_tree;
+    tree.inner.children(parent_node_id.into()).map(|c| c.len()).unwrap_or(0)
+}
+
+/// Returns the child NodeId at the given index under parent_node_id
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_ChildAt(
+    raw_tree: TaffyTreeConstRef,
+    parent_node_id: TaffyNodeId,
+    child_index: usize,
+) -> TaffyNodeIdResult {
+    with_tree!(raw_tree, tree, {
+        let node = try_or!(InvalidNodeId, tree.inner.child_at_index(parent_node_id.into(), child_index));
+        ok!(node.into());
+    })
+}

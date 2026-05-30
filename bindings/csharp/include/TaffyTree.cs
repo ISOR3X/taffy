@@ -276,6 +276,54 @@ namespace Taffy
             set => NativeMethods.TaffyStyle_SetRowGap(_ptr, value.value, value.unit).ThrowIfError();
         }
 
+        // Grid template columns
+        public int GridTemplateColumnsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateColumnsCount(_ptr);
+
+        public TaffyTrackSizingFunction GetGridTemplateColumnsAt(int index) =>
+            NativeMethods.TaffyStyle_GetGridTemplateColumnsAt(_ptr, (nuint)index);
+
+        public void SetGridTemplateColumns(ReadOnlySpan<TaffyTrackSizingFunction> tracks)
+        {
+            fixed (TaffyTrackSizingFunction* ptr = tracks)
+                NativeMethods.TaffyStyle_SetGridTemplateColumns(_ptr, ptr, (nuint)tracks.Length).ThrowIfError();
+        }
+
+        // Grid template rows
+        public int GridTemplateRowsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateRowsCount(_ptr);
+
+        public TaffyTrackSizingFunction GetGridTemplateRowsAt(int index) =>
+            NativeMethods.TaffyStyle_GetGridTemplateRowsAt(_ptr, (nuint)index);
+
+        public void SetGridTemplateRows(ReadOnlySpan<TaffyTrackSizingFunction> tracks)
+        {
+            fixed (TaffyTrackSizingFunction* ptr = tracks)
+                NativeMethods.TaffyStyle_SetGridTemplateRows(_ptr, ptr, (nuint)tracks.Length).ThrowIfError();
+        }
+
+        // Grid auto columns
+        public int GridAutoColumnsCount => (int)NativeMethods.TaffyStyle_GetGridAutoColumnsCount(_ptr);
+
+        public TaffyTrackSizingFunction GetGridAutoColumnsAt(int index) =>
+            NativeMethods.TaffyStyle_GetGridAutoColumnsAt(_ptr, (nuint)index);
+
+        public void SetGridAutoColumns(ReadOnlySpan<TaffyTrackSizingFunction> tracks)
+        {
+            fixed (TaffyTrackSizingFunction* ptr = tracks)
+                NativeMethods.TaffyStyle_SetGridAutoColumns(_ptr, ptr, (nuint)tracks.Length).ThrowIfError();
+        }
+
+        // Grid auto rows
+        public int GridAutoRowsCount => (int)NativeMethods.TaffyStyle_GetGridAutoRowsCount(_ptr);
+
+        public TaffyTrackSizingFunction GetGridAutoRowsAt(int index) =>
+            NativeMethods.TaffyStyle_GetGridAutoRowsAt(_ptr, (nuint)index);
+
+        public void SetGridAutoRows(ReadOnlySpan<TaffyTrackSizingFunction> tracks)
+        {
+            fixed (TaffyTrackSizingFunction* ptr = tracks)
+                NativeMethods.TaffyStyle_SetGridAutoRows(_ptr, ptr, (nuint)tracks.Length).ThrowIfError();
+        }
+
         // Misc
         public float? AspectRatio
         {
@@ -352,6 +400,16 @@ namespace Taffy
             delegate* unmanaged[Cdecl]<TaffyMeasureMode, float, TaffyMeasureMode, float, void*, TaffySize> measureFn,
             void* context = null) =>
             NativeMethods.TaffyTree_SetNodeContext(Ptr, node.Id, measureFn, context).ThrowIfError();
+
+        public int ChildCount(TaffyNode parent) =>
+            (int)NativeMethods.TaffyTree_ChildCount(Ptr, parent.Id);
+
+        public TaffyNode ChildAt(TaffyNode parent, int index)
+        {
+            var result = NativeMethods.TaffyTree_ChildAt(Ptr, parent.Id, (nuint)index);
+            result.return_code.ThrowIfError();
+            return new TaffyNode(result.value);
+        }
     }
 
     /// <summary>
@@ -365,5 +423,41 @@ namespace Taffy
         public static TaffyDimension MinContent() => new() { value = 0, unit = TaffyUnit.MinContent };
         public static TaffyDimension MaxContent() => new() { value = 0, unit = TaffyUnit.MaxContent };
         public static TaffyDimension Fr(float value) => new() { value = value, unit = TaffyUnit.Fr };
+    }
+
+    /// <summary>
+    /// Convenience factory for <see cref="TaffyTrackSizingFunction"/> values matching Taffy's style helpers.
+    /// </summary>
+    public static class TrackSizingFunction
+    {
+        static TaffyDimension Auto => Dimension.Auto();
+
+        /// <summary>Fixed pixel track.</summary>
+        public static TaffyTrackSizingFunction Px(float value) =>
+            new() { min = Dimension.Px(value), max = Dimension.Px(value) };
+
+        /// <summary>Percentage track.</summary>
+        public static TaffyTrackSizingFunction Percent(float value) =>
+            new() { min = Dimension.Percent(value), max = Dimension.Percent(value) };
+
+        /// <summary>Flexible fr track (auto min, fr max).</summary>
+        public static TaffyTrackSizingFunction Fr(float value) =>
+            new() { min = Auto, max = Dimension.Fr(value) };
+
+        /// <summary>auto track.</summary>
+        public static TaffyTrackSizingFunction AutoTrack() =>
+            new() { min = Auto, max = Auto };
+
+        /// <summary>min-content track.</summary>
+        public static TaffyTrackSizingFunction MinContent() =>
+            new() { min = Dimension.MinContent(), max = Dimension.MinContent() };
+
+        /// <summary>max-content track.</summary>
+        public static TaffyTrackSizingFunction MaxContent() =>
+            new() { min = Dimension.MaxContent(), max = Dimension.MaxContent() };
+
+        /// <summary>minmax(min, max) track.</summary>
+        public static TaffyTrackSizingFunction MinMax(TaffyDimension min, TaffyDimension max) =>
+            new() { min = min, max = max };
     }
 }
