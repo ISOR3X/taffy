@@ -67,11 +67,11 @@ macro_rules! enum_prop_getter {
 }
 
 macro_rules! option_enum_prop_getter {
-    ($func_name:ident; $($props:ident).+) => {
+    ($func_name:ident; $enum:ident; $($props:ident).+) => {
         #[no_mangle]
         #[allow(clippy::missing_safety_doc)]
         pub unsafe extern "C" fn $func_name(raw_style: TaffyStyleConstRef) -> i32 {
-            get_style!(raw_style, style, style.$($props).*.map(|v| v as i32).unwrap_or(0))
+            get_style!(raw_style, style, $enum::from(style.$($props).*) as i32)
         }
     };
 }
@@ -145,12 +145,12 @@ enum_prop_getter!(TaffyStyle_GetOverflowY; TaffyOverflow; overflow.y);
 enum_prop_setter!(TaffyStyle_SetOverflowY; TaffyOverflow; overflow.y);
 
 // Alignment
-option_enum_prop_getter!(TaffyStyle_GetAlignContent; align_content);
-option_enum_prop_getter!(TaffyStyle_GetAlignItems; align_items);
-option_enum_prop_getter!(TaffyStyle_GetAlignSelf; align_self);
-option_enum_prop_getter!(TaffyStyle_GetJustifyContent; justify_content);
-option_enum_prop_getter!(TaffyStyle_GetJustifyItems; justify_items);
-option_enum_prop_getter!(TaffyStyle_GetJustifySelf; justify_self);
+option_enum_prop_getter!(TaffyStyle_GetAlignContent; TaffyAlignContent; align_content);
+option_enum_prop_getter!(TaffyStyle_GetAlignItems; TaffyAlignItems; align_items);
+option_enum_prop_getter!(TaffyStyle_GetAlignSelf; TaffyAlignItems; align_self);
+option_enum_prop_getter!(TaffyStyle_GetJustifyContent; TaffyAlignContent; justify_content);
+option_enum_prop_getter!(TaffyStyle_GetJustifyItems; TaffyAlignItems; justify_items);
+option_enum_prop_getter!(TaffyStyle_GetJustifySelf; TaffyAlignItems; justify_self);
 enum_prop_setter!(TaffyStyle_SetAlignContent; TaffyAlignContent; align_content);
 enum_prop_setter!(TaffyStyle_SetAlignItems; TaffyAlignItems; align_items);
 enum_prop_setter!(TaffyStyle_SetAlignSelf; TaffyAlignItems; align_self);

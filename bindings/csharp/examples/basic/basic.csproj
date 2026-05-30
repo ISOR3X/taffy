@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../include/Taffy.csproj" />
+  </ItemGroup>
+
+  <!-- Copy the native ctaffy library to the output directory so the example can run -->
+  <!-- Adjust the path/filename for your platform: ctaffy.dll (Windows), libctaffy.so (Linux), libctaffy.dylib (macOS) -->
+  <ItemGroup>
+    <Content Include="../../../../target/release/ctaffy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

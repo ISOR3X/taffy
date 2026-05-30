@@ -173,13 +173,15 @@ impl From<Option<core::AlignItems>> for TaffyAlignItems {
     fn from(input: Option<core::AlignItems>) -> TaffyAlignItems {
         match input {
             None => TaffyAlignItems::Normal,
-            Some(core::AlignItems::Start) => TaffyAlignItems::Start,
-            Some(core::AlignItems::End) => TaffyAlignItems::End,
-            Some(core::AlignItems::FlexStart) => TaffyAlignItems::FlexStart,
-            Some(core::AlignItems::FlexEnd) => TaffyAlignItems::FlexEnd,
-            Some(core::AlignItems::Center) => TaffyAlignItems::Center,
-            Some(core::AlignItems::Baseline) => TaffyAlignItems::Baseline,
-            Some(core::AlignItems::Stretch) => TaffyAlignItems::Stretch,
+            Some(v) => match v.keyword {
+                core::AlignItemsKeyword::Start => TaffyAlignItems::Start,
+                core::AlignItemsKeyword::End => TaffyAlignItems::End,
+                core::AlignItemsKeyword::FlexStart => TaffyAlignItems::FlexStart,
+                core::AlignItemsKeyword::FlexEnd => TaffyAlignItems::FlexEnd,
+                core::AlignItemsKeyword::Center => TaffyAlignItems::Center,
+                core::AlignItemsKeyword::Baseline => TaffyAlignItems::Baseline,
+                core::AlignItemsKeyword::Stretch => TaffyAlignItems::Stretch,
+            },
         }
     }
 }
@@ -243,15 +245,17 @@ impl From<Option<core::AlignContent>> for TaffyAlignContent {
     fn from(input: Option<core::AlignContent>) -> TaffyAlignContent {
         match input {
             None => TaffyAlignContent::Normal,
-            Some(core::AlignContent::Start) => TaffyAlignContent::Start,
-            Some(core::AlignContent::End) => TaffyAlignContent::End,
-            Some(core::AlignContent::FlexStart) => TaffyAlignContent::FlexStart,
-            Some(core::AlignContent::FlexEnd) => TaffyAlignContent::FlexEnd,
-            Some(core::AlignContent::Center) => TaffyAlignContent::Center,
-            Some(core::AlignContent::Stretch) => TaffyAlignContent::Stretch,
-            Some(core::AlignContent::SpaceBetween) => TaffyAlignContent::SpaceBetween,
-            Some(core::AlignContent::SpaceAround) => TaffyAlignContent::SpaceAround,
-            Some(core::AlignContent::SpaceEvenly) => TaffyAlignContent::SpaceEvenly,
+            Some(v) => match v.keyword {
+                core::AlignContentKeyword::Start => TaffyAlignContent::Start,
+                core::AlignContentKeyword::End => TaffyAlignContent::End,
+                core::AlignContentKeyword::FlexStart => TaffyAlignContent::FlexStart,
+                core::AlignContentKeyword::FlexEnd => TaffyAlignContent::FlexEnd,
+                core::AlignContentKeyword::Center => TaffyAlignContent::Center,
+                core::AlignContentKeyword::Stretch => TaffyAlignContent::Stretch,
+                core::AlignContentKeyword::SpaceBetween => TaffyAlignContent::SpaceBetween,
+                core::AlignContentKeyword::SpaceAround => TaffyAlignContent::SpaceAround,
+                core::AlignContentKeyword::SpaceEvenly => TaffyAlignContent::SpaceEvenly,
+            },
         }
     }
 }

@@ -62,8 +62,8 @@ pub enum TaffyMeasureMode {
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct TaffySize {
-    width: f32,
-    height: f32,
+    pub width: f32,
+    pub height: f32,
 }
 impl From<TaffySize> for core::Size<f32> {
     #[inline(always)]
@@ -107,9 +107,11 @@ impl TaffyDimension {
 
 impl From<core::LengthPercentage> for TaffyDimension {
     fn from(value: core::LengthPercentage) -> Self {
-        match value {
-            core::LengthPercentage::Length(value) => Self { unit: TaffyUnit::Length, value },
-            core::LengthPercentage::Percent(value) => Self { unit: TaffyUnit::Percent, value },
+        let raw = value.into_raw();
+        match raw.tag() {
+            core::CompactLength::LENGTH_TAG => Self { unit: TaffyUnit::Length, value: raw.value() },
+            core::CompactLength::PERCENT_TAG => Self { unit: TaffyUnit::Percent, value: raw.value() },
+            _ => Self { unit: TaffyUnit::None, value: 0.0 },
         }
     }
 }
@@ -134,10 +136,12 @@ impl TryFrom<TaffyDimension> for core::LengthPercentage {
 
 impl From<core::LengthPercentageAuto> for TaffyDimension {
     fn from(value: core::LengthPercentageAuto) -> Self {
-        match value {
-            core::LengthPercentageAuto::Length(value) => Self { unit: TaffyUnit::Length, value },
-            core::LengthPercentageAuto::Percent(value) => Self { unit: TaffyUnit::Percent, value },
-            core::LengthPercentageAuto::Auto => Self { unit: TaffyUnit::Auto, value: 0.0 },
+        let raw = value.into_raw();
+        match raw.tag() {
+            core::CompactLength::LENGTH_TAG => Self { unit: TaffyUnit::Length, value: raw.value() },
+            core::CompactLength::PERCENT_TAG => Self { unit: TaffyUnit::Percent, value: raw.value() },
+            core::CompactLength::AUTO_TAG => Self { unit: TaffyUnit::Auto, value: 0.0 },
+            _ => Self { unit: TaffyUnit::None, value: 0.0 },
         }
     }
 }
@@ -162,10 +166,12 @@ impl TryFrom<TaffyDimension> for core::LengthPercentageAuto {
 
 impl From<core::Dimension> for TaffyDimension {
     fn from(value: core::Dimension) -> Self {
-        match value {
-            core::Dimension::Length(value) => Self { unit: TaffyUnit::Length, value },
-            core::Dimension::Percent(value) => Self { unit: TaffyUnit::Percent, value },
-            core::Dimension::Auto => Self { unit: TaffyUnit::Auto, value: 0.0 },
+        let raw = value.into_raw();
+        match raw.tag() {
+            core::CompactLength::LENGTH_TAG => Self { unit: TaffyUnit::Length, value: raw.value() },
+            core::CompactLength::PERCENT_TAG => Self { unit: TaffyUnit::Percent, value: raw.value() },
+            core::CompactLength::AUTO_TAG => Self { unit: TaffyUnit::Auto, value: 0.0 },
+            _ => Self { unit: TaffyUnit::None, value: 0.0 },
         }
     }
 }
@@ -204,14 +210,30 @@ impl TaffyFFIDefault for TaffyGridPlacement {
 }
 
 impl From<TaffyGridPlacement> for core::Line<core::GridPlacement> {
-    fn from(placement: TaffyGridPlacement) -> Self {
-        Self::from_raw_parts(placement.start, placement.span, placement.end)
+    fn from(p: TaffyGridPlacement) -> Self {
+        let start = match (p.start, p.span) {
+            (0, 0) => core::GridPlacement::Auto,
+            (0, s) => core::GridPlacement::Span(s),
+            (l, _) => core::GridPlacement::Line(l.into()),
+        };
+        let end = if p.end != 0 { core::GridPlacement::Line(p.end.into()) } else { core::GridPlacement::Auto };
+        core::Line { start, end }
     }
 }
 
 impl From<core::Line<core::GridPlacement>> for TaffyGridPlacement {
     fn from(placement: core::Line<core::GridPlacement>) -> Self {
-        let (start, span, end) = placement.into_raw_parts();
-        Self { start, span, end }
+        let (start, start_span) = match placement.start {
+            core::GridPlacement::Line(l) => (l.as_i16(), 0u16),
+            core::GridPlacement::Span(s) => (0i16, s),
+            _ => (0i16, 0u16),
+        };
+        let (end, end_span) = match placement.end {
+            core::GridPlacement::Line(l) => (l.as_i16(), 0u16),
+            core::GridPlacement::Span(s) => (0i16, s),
+            _ => (0i16, 0u16),
+        };
+        let span = if start_span != 0 { start_span } else { end_span };
+        Self { start, end, span }
     }
 }

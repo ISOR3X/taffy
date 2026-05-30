@@ -1,6 +1,6 @@
 use super::{
-    bail, bail_if_null, ok, try_or, TaffyFFIDefault, TaffyFFIResult, TaffyLayout, TaffyMeasureMode, TaffyResult,
-    TaffyReturnCode, TaffySize, TaffyStyleMutRef,
+    bail, bail_if_null, ok, try_or, TaffyFFIDefault, TaffyFFIResult, TaffyLayout, TaffyMeasureMode, TaffyReturnCode,
+    TaffySize, TaffyStyleMutRef,
 };
 use ::core::ffi::c_void;
 use taffy::prelude as core;
@@ -43,6 +43,67 @@ impl From<core::NodeId> for TaffyNodeId {
 impl From<TaffyNodeId> for core::NodeId {
     fn from(input: TaffyNodeId) -> Self {
         core::NodeId::new(input.0)
+    }
+}
+
+// Concrete result types — avoids the generic TaffyResult<T> which csbindgen cannot emit as valid C#.
+#[repr(C)]
+pub struct TaffyNodeIdResult {
+    pub return_code: TaffyReturnCode,
+    pub value: TaffyNodeId,
+}
+impl TaffyFFIDefault for TaffyNodeIdResult {
+    fn default() -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value: TaffyNodeId(0) }
+    }
+}
+impl TaffyFFIResult for TaffyNodeIdResult {
+    type Value = TaffyNodeId;
+    fn from_value(value: TaffyNodeId) -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value }
+    }
+    fn from_return_code(return_code: TaffyReturnCode) -> Self {
+        Self { return_code, value: TaffyNodeId(0) }
+    }
+}
+
+#[repr(C)]
+pub struct TaffyStyleMutRefResult {
+    pub return_code: TaffyReturnCode,
+    pub value: TaffyStyleMutRef,
+}
+impl TaffyFFIDefault for TaffyStyleMutRefResult {
+    fn default() -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value: ::core::ptr::null_mut() }
+    }
+}
+impl TaffyFFIResult for TaffyStyleMutRefResult {
+    type Value = TaffyStyleMutRef;
+    fn from_value(value: TaffyStyleMutRef) -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value }
+    }
+    fn from_return_code(return_code: TaffyReturnCode) -> Self {
+        Self { return_code, value: ::core::ptr::null_mut() }
+    }
+}
+
+#[repr(C)]
+pub struct TaffyLayoutResult {
+    pub return_code: TaffyReturnCode,
+    pub value: TaffyLayout,
+}
+impl TaffyFFIDefault for TaffyLayoutResult {
+    fn default() -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0 } }
+    }
+}
+impl TaffyFFIResult for TaffyLayoutResult {
+    type Value = TaffyLayout;
+    fn from_value(value: TaffyLayout) -> Self {
+        Self { return_code: TaffyReturnCode::Ok, value }
+    }
+    fn from_return_code(return_code: TaffyReturnCode) -> Self {
+        Self { return_code, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0 } }
     }
 }
 
@@ -158,7 +219,7 @@ pub unsafe extern "C" fn TaffyTree_PrintTree(raw_tree: TaffyTreeMutRef, node_id:
 /// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn TaffyTree_NewNode(raw_tree: TaffyTreeMutRef) -> TaffyResult<TaffyNodeId> {
+pub unsafe extern "C" fn TaffyTree_NewNode(raw_tree: TaffyTreeMutRef) -> TaffyNodeIdResult {
     with_tree_mut!(raw_tree, tree, {
         // TODO: make new_leaf infallible
         let node_id = tree.inner.new_leaf(core::Style::default()).unwrap();
@@ -200,7 +261,7 @@ pub unsafe extern "C" fn TaffyTree_AppendChild(
 pub unsafe extern "C" fn TaffyTree_GetStyleMut(
     raw_tree: TaffyTreeMutRef,
     node_id: TaffyNodeId,
-) -> TaffyResult<TaffyStyleMutRef> {
+) -> TaffyStyleMutRefResult {
     with_tree_mut!(raw_tree, tree, {
         let style = try_or!(InvalidNodeId, tree.inner.try_style_mut(node_id.into()));
         ok!(style as *mut core::Style as TaffyStyleMutRef);
@@ -231,7 +292,7 @@ pub unsafe extern "C" fn TaffyTree_SetNodeContext(
 pub unsafe extern "C" fn TaffyTree_GetLayout(
     raw_tree: TaffyTreeConstRef,
     node_id: TaffyNodeId,
-) -> TaffyResult<TaffyLayout> {
+) -> TaffyLayoutResult {
     with_tree!(raw_tree, tree, {
         let layout = try_or!(InvalidNodeId, tree.inner.layout(node_id.into()));
         ok!(TaffyLayout {

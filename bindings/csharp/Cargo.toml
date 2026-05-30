@@ -1,0 +1,13 @@
+[package]
+name = "cs-taffy"
+version = "0.0.1"
+edition = "2021"
+description = "C# bindings to Taffy (via taffy C bindings)"
+repository = "https://github.com/DioxusLabs/taffy"
+license = "MIT"
+
+[build-dependencies]
+csbindgen = "1"
+
+[dependencies]
+ctaffy = { path = "../c" }
