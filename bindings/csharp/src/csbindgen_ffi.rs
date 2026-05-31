@@ -5,6 +5,8 @@
 // This file is NOT compiled into the ctaffy library.
 // The actual implementations live in bindings/c/src/style.rs via macro expansion.
 
+use ctaffy::{TaffyAlignContent, TaffyAlignItems, TaffyDimension, TaffyDisplay, TaffyFlexDirection, TaffyFlexWrap, TaffyGridAutoFlow, TaffyOverflow, TaffyPosition, TaffyReturnCode, TaffyStyle, TaffyUnit};
+
 // Display
 #[no_mangle] pub unsafe extern "C" fn TaffyStyle_GetDisplay(_raw_style: *const TaffyStyle) -> TaffyDisplay { loop {} }
 #[no_mangle] pub unsafe extern "C" fn TaffyStyle_SetDisplay(_raw_style: *mut TaffyStyle, _value: TaffyDisplay) -> TaffyReturnCode { loop {} }
