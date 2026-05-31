@@ -64,6 +64,21 @@ namespace Taffy
         public static extern TaffyReturnCode TaffyTree_AppendChild(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, TaffyNodeId child_node_id);
 
         /// <summary>
+        ///  Remove and Free a Node within a TaffyTree
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_RemoveChild", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyReturnCode TaffyTree_RemoveChild(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, TaffyNodeId child_node_id);
+
+        /// <summary>
+        ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_NewLeaf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyNodeIdResult TaffyTree_NewLeaf(TaffyNativeTree* raw_tree, TaffyStyle* style);
+
+        [DllImport(__DllName, EntryPoint = "TaffyTree_NewWithChildren", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyNativeTree* raw_tree, TaffyStyle* style, TaffyNodeId* children, System.UIntPtr children_len);
+
+        /// <summary>
         ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_GetStyleMut", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

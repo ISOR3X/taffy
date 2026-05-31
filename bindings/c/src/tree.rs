@@ -1,3 +1,5 @@
+use crate::TaffyStyleConstRef;
+
 use super::{
     bail, bail_if_null, ok, try_or, TaffyFFIDefault, TaffyFFIResult, TaffyLayout, TaffyMeasureMode, TaffyReturnCode,
     TaffySize, TaffyStyleMutRef,
@@ -250,6 +252,55 @@ pub unsafe extern "C" fn TaffyTree_AppendChild(
         ok!(TaffyReturnCode::Ok);
     })
 }
+
+/// Remove and Free a Node within a TaffyTree
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_RemoveChild(
+    raw_tree: TaffyTreeMutRef,
+    parent_node_id: TaffyNodeId,
+    child_node_id: TaffyNodeId,
+) -> TaffyReturnCode {
+    with_tree_mut!(raw_tree, tree, {
+        try_or!(InvalidNodeId, tree.inner.remove_child(parent_node_id.into(), child_node_id.into()));
+        ok!(TaffyReturnCode::Ok);
+    })
+}
+
+/// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_NewLeaf(raw_tree: TaffyTreeMutRef, style: TaffyStyleConstRef) -> TaffyNodeIdResult {
+    with_tree_mut!(raw_tree, tree, {
+        bail_if_null!(style, NullStylePointer);
+        let node_id = tree.inner.new_leaf((*(style as *const core::Style)).clone()).unwrap();
+        ok!(node_id.into());
+    })
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_NewWithChildren(
+    raw_tree: TaffyTreeMutRef,
+    style: TaffyStyleConstRef,
+    children: *const TaffyNodeId,
+    children_len: usize,
+) -> TaffyNodeIdResult {
+    with_tree_mut!(raw_tree, tree, {
+        bail_if_null!(style, NullStylePointer);
+        let style = (*(style as *const core::Style)).clone();
+        let child_ids: Vec<core::NodeId> = if children.is_null() || children_len == 0 {
+            Vec::new()
+        } else {
+            let slice = ::core::slice::from_raw_parts(children, children_len);
+            slice.iter().map(|c| core::NodeId::new(c.0)).collect()
+        };
+        let node_id = try_or!(InvalidNodeId, tree.inner.new_with_children(style, &child_ids));
+        ok!(node_id.into());
+    })
+}
+
+
 
 // -------------------------------------------------
 // Style and Layout access

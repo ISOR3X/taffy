@@ -10,6 +10,7 @@ _scratch
 **/*.rs.bk
 Cargo.lock
 .DS_Store
+.idea
 
 .vscode
 

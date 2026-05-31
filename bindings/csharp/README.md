@@ -12,7 +12,7 @@ Assuming you have Rust and Cargo installed (and a C compiler), then this should 
 
 ```bash
 git clone https://github.com/ISOR3X/taffy.git
-cargo build --release -p ctaffy
+cargo build --release -p csharp-taffy
 cd bindings/csharp
 dotnet run --project examples/basic
 ```

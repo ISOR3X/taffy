@@ -43,6 +43,7 @@ namespace Taffy
     public readonly unsafe struct TaffyStyleRef(TaffyStyle* ptr)
     {
         private readonly TaffyStyle* _ptr = ptr;
+        internal TaffyStyle* Ptr => _ptr;
 
         // Display / Position / Overflow
         public TaffyDisplay Display
@@ -280,48 +281,48 @@ namespace Taffy
         public int GridTemplateColumnsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateColumnsCount(_ptr);
 
         public TaffyTrackSizingFunction GetGridTemplateColumnsAt(int index) =>
-            NativeMethods.TaffyStyle_GetGridTemplateColumnsAt(_ptr, (System.UIntPtr)index);
+            NativeMethods.TaffyStyle_GetGridTemplateColumnsAt(_ptr, (UIntPtr)index);
 
         public void SetGridTemplateColumns(TaffyTrackSizingFunction[] tracks)
         {
             fixed (TaffyTrackSizingFunction* ptr = tracks)
-                NativeMethods.TaffyStyle_SetGridTemplateColumns(_ptr, ptr, (System.UIntPtr)tracks.Length).ThrowIfError();
+                NativeMethods.TaffyStyle_SetGridTemplateColumns(_ptr, ptr, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
         // Grid template rows
         public int GridTemplateRowsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateRowsCount(_ptr);
 
         public TaffyTrackSizingFunction GetGridTemplateRowsAt(int index) =>
-            NativeMethods.TaffyStyle_GetGridTemplateRowsAt(_ptr, (System.UIntPtr)index);
+            NativeMethods.TaffyStyle_GetGridTemplateRowsAt(_ptr, (UIntPtr)index);
 
         public void SetGridTemplateRows(TaffyTrackSizingFunction[] tracks)
         {
             fixed (TaffyTrackSizingFunction* ptr = tracks)
-                NativeMethods.TaffyStyle_SetGridTemplateRows(_ptr, ptr, (System.UIntPtr)tracks.Length).ThrowIfError();
+                NativeMethods.TaffyStyle_SetGridTemplateRows(_ptr, ptr, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
         // Grid auto columns
         public int GridAutoColumnsCount => (int)NativeMethods.TaffyStyle_GetGridAutoColumnsCount(_ptr);
 
         public TaffyTrackSizingFunction GetGridAutoColumnsAt(int index) =>
-            NativeMethods.TaffyStyle_GetGridAutoColumnsAt(_ptr, (System.UIntPtr)index);
+            NativeMethods.TaffyStyle_GetGridAutoColumnsAt(_ptr, (UIntPtr)index);
 
         public void SetGridAutoColumns(TaffyTrackSizingFunction[] tracks)
         {
             fixed (TaffyTrackSizingFunction* ptr = tracks)
-                NativeMethods.TaffyStyle_SetGridAutoColumns(_ptr, ptr, (System.UIntPtr)tracks.Length).ThrowIfError();
+                NativeMethods.TaffyStyle_SetGridAutoColumns(_ptr, ptr, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
         // Grid auto rows
         public int GridAutoRowsCount => (int)NativeMethods.TaffyStyle_GetGridAutoRowsCount(_ptr);
 
         public TaffyTrackSizingFunction GetGridAutoRowsAt(int index) =>
-            NativeMethods.TaffyStyle_GetGridAutoRowsAt(_ptr, (System.UIntPtr)index);
+            NativeMethods.TaffyStyle_GetGridAutoRowsAt(_ptr, (UIntPtr)index);
 
         public void SetGridAutoRows(TaffyTrackSizingFunction[] tracks)
         {
             fixed (TaffyTrackSizingFunction* ptr = tracks)
-                NativeMethods.TaffyStyle_SetGridAutoRows(_ptr, ptr, (System.UIntPtr)tracks.Length).ThrowIfError();
+                NativeMethods.TaffyStyle_SetGridAutoRows(_ptr, ptr, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
         // Misc
@@ -343,6 +344,8 @@ namespace Taffy
     public sealed unsafe class TaffyTree : IDisposable
     {
         private TaffyNativeTree* _ptr;
+        // Keeps native measure delegates rooted so the GC doesn't collect them while Rust holds function pointers to them.
+        private readonly Dictionary<ulong, NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate> _measureDelegates = new();
 
         public TaffyTree()
         {
@@ -357,23 +360,50 @@ namespace Taffy
             {
                 NativeMethods.TaffyTree_Free(_ptr);
                 _ptr = null;
+                _measureDelegates.Clear();
             }
         }
 
         private TaffyNativeTree* Ptr => _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyTree));
-
+        
         public TaffyNode NewNode()
         {
             var result = NativeMethods.TaffyTree_NewNode(Ptr);
             result.return_code.ThrowIfError();
             return new TaffyNode(result.value);
         }
-
-        public void RemoveNode(TaffyNode node) =>
+        
+        public void RemoveNode(TaffyNode node)
+        {
+            _measureDelegates.Remove(node.Id.Item1);
             NativeMethods.TaffyTree_RemoveNode(Ptr, node.Id).ThrowIfError();
+        }
+
+        public TaffyNode NewLeaf(TaffyStyleRef style)
+        {
+            var result = NativeMethods.TaffyTree_NewLeaf(Ptr, style.Ptr);
+            result.return_code.ThrowIfError();
+            return new TaffyNode(result.value);
+        }
+
+        public unsafe TaffyNode NewWithChildren(TaffyStyleRef style, TaffyNode[] children)
+        {
+            var ids = new TaffyNodeId[children.Length];
+            for (int i = 0; i < children.Length; i++)
+                ids[i] = children[i].Id;
+            fixed (TaffyNodeId* pIds = ids)
+            {
+                var result = NativeMethods.TaffyTree_NewWithChildren(Ptr, style.Ptr, pIds, (UIntPtr)ids.Length);
+                result.return_code.ThrowIfError();
+                return new TaffyNode(result.value);
+            }
+        }
 
         public void AppendChild(TaffyNode parent, TaffyNode child) =>
             NativeMethods.TaffyTree_AppendChild(Ptr, parent.Id, child.Id).ThrowIfError();
+
+        public void RemoveChild(TaffyNode parent, TaffyNode child) =>
+            NativeMethods.TaffyTree_RemoveChild(Ptr, parent.Id, child.Id).ThrowIfError();
 
         public TaffyStyleRef GetStyle(TaffyNode node)
         {
@@ -397,16 +427,20 @@ namespace Taffy
 
         public void SetMeasureFunction(
             TaffyNode node,
-            NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate measureFn,
-            void* context = null) =>
-            NativeMethods.TaffyTree_SetNodeContext(Ptr, node.Id, measureFn, context).ThrowIfError();
+            Func<TaffyMeasureMode, float, TaffyMeasureMode, float, TaffySize> measureFn)
+        {
+            NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate nativeDelegate =
+                (wm, w, hm, h, _) => measureFn(wm, w, hm, h);
+            _measureDelegates[node.Id.Item1] = nativeDelegate;
+            NativeMethods.TaffyTree_SetNodeContext(Ptr, node.Id, nativeDelegate, null).ThrowIfError();
+        }
 
         public int ChildCount(TaffyNode parent) =>
             (int)NativeMethods.TaffyTree_ChildCount(Ptr, parent.Id);
 
         public TaffyNode ChildAt(TaffyNode parent, int index)
         {
-            var result = NativeMethods.TaffyTree_ChildAt(Ptr, parent.Id, (System.UIntPtr)index);
+            var result = NativeMethods.TaffyTree_ChildAt(Ptr, parent.Id, (UIntPtr)index);
             result.return_code.ThrowIfError();
             return new TaffyNode(result.value);
         }

@@ -613,6 +613,19 @@ enum TaffyReturnCode TaffyTree_AppendChild(TaffyTreeMutRef raw_tree,
                                            struct TaffyNodeId parent_node_id,
                                            struct TaffyNodeId child_node_id);
 
+// Remove and Free a Node within a TaffyTree
+enum TaffyReturnCode TaffyTree_RemoveChild(TaffyTreeMutRef raw_tree,
+                                           struct TaffyNodeId parent_node_id,
+                                           struct TaffyNodeId child_node_id);
+
+// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+struct TaffyNodeIdResult TaffyTree_NewLeaf(TaffyTreeMutRef raw_tree, TaffyStyleConstRef style);
+
+struct TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyTreeMutRef raw_tree,
+                                                   TaffyStyleConstRef style,
+                                                   const struct TaffyNodeId *children,
+                                                   uintptr_t children_len);
+
 // Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 struct TaffyStyleMutRefResult TaffyTree_GetStyleMut(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id);
 
