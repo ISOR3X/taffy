@@ -26,10 +26,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0'
-      - name: Build ctaffy
-        run: cargo build --release -p ctaffy
-      - name: Build Taffy.dll
-        run: dotnet build bindings/csharp/include/Taffy.csproj --configuration Release
+      - name: Build bindings
+        run: bash bindings/csharp/generate-bindings.sh
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

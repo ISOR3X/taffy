@@ -44,234 +44,386 @@ namespace Taffy
     {
         internal TaffyStyle* Ptr => ptr;
 
-        // Display / Position / Overflow
+        #region DISPLAY
+
         public TaffyDisplay Display
         {
             get => NativeMethods.TaffyStyle_GetDisplay(ptr);
             set => NativeMethods.TaffyStyle_SetDisplay(ptr, value).ThrowIfError();
         }
+
         public TaffyPosition Position
         {
             get => NativeMethods.TaffyStyle_GetPosition(ptr);
             set => NativeMethods.TaffyStyle_SetPosition(ptr, value).ThrowIfError();
         }
+
         public TaffyOverflow OverflowX
         {
             get => NativeMethods.TaffyStyle_GetOverflowX(ptr);
             set => NativeMethods.TaffyStyle_SetOverflowX(ptr, value).ThrowIfError();
         }
+
         public TaffyOverflow OverflowY
         {
             get => NativeMethods.TaffyStyle_GetOverflowY(ptr);
             set => NativeMethods.TaffyStyle_SetOverflowY(ptr, value).ThrowIfError();
         }
 
-        // Alignment
+        #endregion
+
+        #region ALIGNMENT
+
         public TaffyAlignContent? AlignContent
         {
-            get { var v = NativeMethods.TaffyStyle_GetAlignContent(ptr); return v == 0 ? null : (TaffyAlignContent)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetAlignContent(ptr);
+                return v == 0 ? null : (TaffyAlignContent)v;
+            }
             set => NativeMethods.TaffyStyle_SetAlignContent(ptr, value ?? TaffyAlignContent.Normal).ThrowIfError();
         }
+
         public TaffyAlignItems? AlignItems
         {
-            get { var v = NativeMethods.TaffyStyle_GetAlignItems(ptr); return v == 0 ? null : (TaffyAlignItems)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetAlignItems(ptr);
+                return v == 0 ? null : (TaffyAlignItems)v;
+            }
             set => NativeMethods.TaffyStyle_SetAlignItems(ptr, value ?? TaffyAlignItems.Normal).ThrowIfError();
         }
+
         public TaffyAlignItems? AlignSelf
         {
-            get { var v = NativeMethods.TaffyStyle_GetAlignSelf(ptr); return v == 0 ? null : (TaffyAlignItems)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetAlignSelf(ptr);
+                return v == 0 ? null : (TaffyAlignItems)v;
+            }
             set => NativeMethods.TaffyStyle_SetAlignSelf(ptr, value ?? TaffyAlignItems.Normal).ThrowIfError();
         }
+
         public TaffyAlignContent? JustifyContent
         {
-            get { var v = NativeMethods.TaffyStyle_GetJustifyContent(ptr); return v == 0 ? null : (TaffyAlignContent)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetJustifyContent(ptr);
+                return v == 0 ? null : (TaffyAlignContent)v;
+            }
             set => NativeMethods.TaffyStyle_SetJustifyContent(ptr, value ?? TaffyAlignContent.Normal).ThrowIfError();
         }
+
         public TaffyAlignItems? JustifyItems
         {
-            get { var v = NativeMethods.TaffyStyle_GetJustifyItems(ptr); return v == 0 ? null : (TaffyAlignItems)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetJustifyItems(ptr);
+                return v == 0 ? null : (TaffyAlignItems)v;
+            }
             set => NativeMethods.TaffyStyle_SetJustifyItems(ptr, value ?? TaffyAlignItems.Normal).ThrowIfError();
         }
+
         public TaffyAlignItems? JustifySelf
         {
-            get { var v = NativeMethods.TaffyStyle_GetJustifySelf(ptr); return v == 0 ? null : (TaffyAlignItems)v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetJustifySelf(ptr);
+                return v == 0 ? null : (TaffyAlignItems)v;
+            }
             set => NativeMethods.TaffyStyle_SetJustifySelf(ptr, value ?? TaffyAlignItems.Normal).ThrowIfError();
         }
 
-        // Flex
+        #endregion
+
+        #region FLEX
+
         public TaffyFlexDirection FlexDirection
         {
             get => NativeMethods.TaffyStyle_GetFlexDirection(ptr);
             set => NativeMethods.TaffyStyle_SetFlexDirection(ptr, value).ThrowIfError();
         }
+
         public TaffyFlexWrap FlexWrap
         {
             get => NativeMethods.TaffyStyle_GetFlexWrap(ptr);
             set => NativeMethods.TaffyStyle_SetFlexWrap(ptr, value).ThrowIfError();
         }
+
         public TaffyDimension FlexBasis
         {
             get => NativeMethods.TaffyStyle_GetFlexBasis(ptr);
             set => NativeMethods.TaffyStyle_SetFlexBasis(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public float FlexGrow
         {
             get => NativeMethods.TaffyStyle_GetFlexGrow(ptr);
             set => NativeMethods.TaffyStyle_SetFlexGrow(ptr, value).ThrowIfError();
         }
+
         public float FlexShrink
         {
             get => NativeMethods.TaffyStyle_GetFlexShrink(ptr);
             set => NativeMethods.TaffyStyle_SetFlexShrink(ptr, value).ThrowIfError();
         }
 
-        // Grid
+        #endregion
+
+        #region GRID
+
         public TaffyGridAutoFlow GridAutoFlow
         {
             get => NativeMethods.TaffyStyle_GetGridAutoFlow(ptr);
             set => NativeMethods.TaffyStyle_SetGridAutoFlow(ptr, value).ThrowIfError();
         }
+
         public TaffyGridPlacement GridColumn
         {
             get => NativeMethods.TaffyStyle_GetGridColumn(ptr);
             set => NativeMethods.TaffyStyle_SetGridColumn(ptr, value).ThrowIfError();
         }
+
         public TaffyGridPlacement GridRow
         {
             get => NativeMethods.TaffyStyle_GetGridRow(ptr);
             set => NativeMethods.TaffyStyle_SetGridRow(ptr, value).ThrowIfError();
         }
 
-        // Size
+        #endregion
+
+        #region SIZE
+
         public TaffyDimension Width
         {
             get => NativeMethods.TaffyStyle_GetWidth(ptr);
             set => NativeMethods.TaffyStyle_SetWidth(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension Height
         {
             get => NativeMethods.TaffyStyle_GetHeight(ptr);
             set => NativeMethods.TaffyStyle_SetHeight(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MinWidth
         {
             get => NativeMethods.TaffyStyle_GetMinWidth(ptr);
             set => NativeMethods.TaffyStyle_SetMinWidth(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MinHeight
         {
             get => NativeMethods.TaffyStyle_GetMinHeight(ptr);
             set => NativeMethods.TaffyStyle_SetMinHeight(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MaxWidth
         {
             get => NativeMethods.TaffyStyle_GetMaxWidth(ptr);
             set => NativeMethods.TaffyStyle_SetMaxWidth(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MaxHeight
         {
             get => NativeMethods.TaffyStyle_GetMaxHeight(ptr);
             set => NativeMethods.TaffyStyle_SetMaxHeight(ptr, value.value, value.unit).ThrowIfError();
         }
 
-        // Inset
+        #endregion
+
+        #region INSET
+
         public TaffyDimension InsetTop
         {
             get => NativeMethods.TaffyStyle_GetInsetTop(ptr);
             set => NativeMethods.TaffyStyle_SetInsetTop(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension InsetBottom
         {
             get => NativeMethods.TaffyStyle_GetInsetBottom(ptr);
             set => NativeMethods.TaffyStyle_SetInsetBottom(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension InsetLeft
         {
             get => NativeMethods.TaffyStyle_GetInsetLeft(ptr);
             set => NativeMethods.TaffyStyle_SetInsetLeft(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension InsetRight
         {
             get => NativeMethods.TaffyStyle_GetInsetRight(ptr);
             set => NativeMethods.TaffyStyle_SetInsetRight(ptr, value.value, value.unit).ThrowIfError();
         }
 
-        // Margin
+        // High-level API
+        public TaffyEdges Inset
+        {
+            get => new TaffyEdges(InsetTop, InsetRight, InsetBottom, InsetLeft);
+            set
+            {
+                InsetTop = value.Top;
+                InsetRight = value.Right;
+                InsetBottom = value.Bottom;
+                InsetLeft = value.Left;
+            }
+        }
+
+        #endregion
+
+        #region MARGIN
+
+        // Low-level API
         public TaffyDimension MarginTop
         {
             get => NativeMethods.TaffyStyle_GetMarginTop(ptr);
             set => NativeMethods.TaffyStyle_SetMarginTop(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MarginBottom
         {
             get => NativeMethods.TaffyStyle_GetMarginBottom(ptr);
             set => NativeMethods.TaffyStyle_SetMarginBottom(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MarginLeft
         {
             get => NativeMethods.TaffyStyle_GetMarginLeft(ptr);
             set => NativeMethods.TaffyStyle_SetMarginLeft(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension MarginRight
         {
             get => NativeMethods.TaffyStyle_GetMarginRight(ptr);
             set => NativeMethods.TaffyStyle_SetMarginRight(ptr, value.value, value.unit).ThrowIfError();
         }
-        // Padding
+
+        // High-level API
+        public TaffyEdges Margin
+        {
+            get => new TaffyEdges(MarginTop, MarginRight, MarginBottom, MarginLeft);
+            set
+            {
+                MarginTop = value.Top;
+                MarginRight = value.Right;
+                MarginBottom = value.Bottom;
+                MarginLeft = value.Left;
+            }
+        }
+
+        #endregion
+
+        #region PADDING
+
+        // Low-level API
         public TaffyDimension PaddingTop
         {
             get => NativeMethods.TaffyStyle_GetPaddingTop(ptr);
             set => NativeMethods.TaffyStyle_SetPaddingTop(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension PaddingBottom
         {
             get => NativeMethods.TaffyStyle_GetPaddingBottom(ptr);
             set => NativeMethods.TaffyStyle_SetPaddingBottom(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension PaddingLeft
         {
             get => NativeMethods.TaffyStyle_GetPaddingLeft(ptr);
             set => NativeMethods.TaffyStyle_SetPaddingLeft(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension PaddingRight
         {
             get => NativeMethods.TaffyStyle_GetPaddingRight(ptr);
             set => NativeMethods.TaffyStyle_SetPaddingRight(ptr, value.value, value.unit).ThrowIfError();
         }
 
-        // Border
+        // High-level API
+        public TaffyEdges Padding
+        {
+            get => new(PaddingTop, PaddingRight, PaddingBottom, PaddingLeft);
+            set
+            {
+                PaddingTop = value.Top;
+                PaddingRight = value.Right;
+                PaddingBottom = value.Bottom;
+                PaddingLeft = value.Left;
+            }
+        }
+
+        #endregion
+
+        #region BORDER
+
         public TaffyDimension BorderTop
         {
             get => NativeMethods.TaffyStyle_GetBorderTop(ptr);
             set => NativeMethods.TaffyStyle_SetBorderTop(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension BorderBottom
         {
             get => NativeMethods.TaffyStyle_GetBorderBottom(ptr);
             set => NativeMethods.TaffyStyle_SetBorderBottom(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension BorderLeft
         {
             get => NativeMethods.TaffyStyle_GetBorderLeft(ptr);
             set => NativeMethods.TaffyStyle_SetBorderLeft(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension BorderRight
         {
             get => NativeMethods.TaffyStyle_GetBorderRight(ptr);
             set => NativeMethods.TaffyStyle_SetBorderRight(ptr, value.value, value.unit).ThrowIfError();
         }
 
-        // Gap
+        // High-level API
+        public TaffyEdges Border
+        {
+            get => new TaffyEdges(BorderTop, BorderRight, BorderBottom, BorderLeft);
+            set
+            {
+                BorderTop = value.Top;
+                BorderRight = value.Right;
+                BorderBottom = value.Bottom;
+                BorderLeft = value.Left;
+            }
+        }
+
+        #endregion
+
+        #region GAP
+
         public TaffyDimension ColumnGap
         {
             get => NativeMethods.TaffyStyle_GetColumnGap(ptr);
             set => NativeMethods.TaffyStyle_SetColumnGap(ptr, value.value, value.unit).ThrowIfError();
         }
+
         public TaffyDimension RowGap
         {
             get => NativeMethods.TaffyStyle_GetRowGap(ptr);
             set => NativeMethods.TaffyStyle_SetRowGap(ptr, value.value, value.unit).ThrowIfError();
         }
+
+        // High-level API
+        public TaffyAxes Gap
+        {
+            get => new TaffyAxes(ColumnGap, RowGap);
+            set
+            {
+                ColumnGap = value.Width;
+                RowGap = value.Height;
+            }
+        }
+
+        #endregion
 
         // Grid template columns
         public int GridTemplateColumnsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateColumnsCount(ptr);
@@ -321,17 +473,25 @@ namespace Taffy
                 NativeMethods.TaffyStyle_SetGridAutoRows(ptr, ptr1, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
-        // Misc
+        #region MISC
+
         public float? AspectRatio
         {
-            get { var v = NativeMethods.TaffyStyle_GetAspectRatio(ptr); return float.IsNaN(v) ? null : v; }
+            get
+            {
+                var v = NativeMethods.TaffyStyle_GetAspectRatio(ptr);
+                return float.IsNaN(v) ? null : v;
+            }
             set => NativeMethods.TaffyStyle_SetAspectRatio(ptr, value ?? float.NaN).ThrowIfError();
         }
+
         public float ScrollbarWidth
         {
             get => NativeMethods.TaffyStyle_GetScrollbarWidth(ptr);
             set => NativeMethods.TaffyStyle_SetScrollbarWidth(ptr, value).ThrowIfError();
         }
+
+        #endregion
     }
 
     /// <summary>
@@ -340,8 +500,11 @@ namespace Taffy
     public sealed unsafe class TaffyTree : IDisposable
     {
         private TaffyNativeTree* _ptr;
-        // Keeps native measure delegates rooted so the GC doesn't collect them while Rust holds function pointers to them.
-        private readonly Dictionary<ulong, NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate> _measureDelegates = new();
+
+        // ReSharper disable once CollectionNeverQueried.Local
+        // GC anchor: prevents collection of delegates held as raw function pointers by Rust
+        private readonly Dictionary<ulong, NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate>
+            _measureDelegates = new();
 
         public TaffyTree()
         {
@@ -408,7 +571,8 @@ namespace Taffy
             return new TaffyStyleRef(result.value);
         }
 
-        public void ComputeLayout(TaffyNode root, float availableWidth = float.PositiveInfinity, float availableHeight = float.PositiveInfinity) =>
+        public void ComputeLayout(TaffyNode root, float availableWidth = float.PositiveInfinity,
+            float availableHeight = float.PositiveInfinity) =>
             NativeMethods.TaffyTree_ComputeLayout(Ptr, root.Id, availableWidth, availableHeight).ThrowIfError();
 
         public void PrintTree(TaffyNode root) =>
@@ -489,5 +653,61 @@ namespace Taffy
         /// <summary>minmax(min, max) track.</summary>
         public static TaffyTrackSizingFunction MinMax(TaffyDimension min, TaffyDimension max) =>
             new() { min = min, max = max };
+    }
+
+    /// <summary>
+    /// Convenience factory for setting rust-style `Rect<LengthPercentageAuto>` properties easily.
+    /// </summary>
+    public struct TaffyEdges
+    {
+        public TaffyDimension Top, Right, Bottom, Left;
+
+        public TaffyEdges(TaffyDimension top, TaffyDimension right, TaffyDimension bottom, TaffyDimension left)
+        {
+            Top = top;
+            Right = right;
+            Bottom = bottom;
+            Left = left;
+        }
+
+        public TaffyEdges(TaffyDimension all) : this(all, all, all, all)
+        {
+        }
+
+        public TaffyEdges(TaffyEdge edge, TaffyDimension value)
+        {
+            var zero = new TaffyDimension { value = 0, unit = TaffyUnit.Length };
+            Top = Right = Bottom = Left = zero;
+            switch (edge)
+            {
+                case TaffyEdge.Top: Top = value; break;
+                case TaffyEdge.Bottom: Bottom = value; break;
+                case TaffyEdge.Left: Left = value; break;
+                case TaffyEdge.Right: Right = value; break;
+                case TaffyEdge.Vertical: Top = Bottom = value; break;
+                case TaffyEdge.Horizontal: Left = Right = value; break;
+                case TaffyEdge.All: Top = Right = Bottom = Left = value; break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(edge), edge, null);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convenience factory for setting rust-style `Size<LengthPercentageAuto>` properties easily.
+    /// </summary>
+    public struct TaffyAxes
+    {
+        public TaffyDimension Width, Height;
+
+        public TaffyAxes(TaffyDimension width, TaffyDimension height)
+        {
+            Width = width;
+            Height = height;
+        }
+
+        public TaffyAxes(TaffyDimension all) : this(all, all)
+        {
+        }
     }
 }
