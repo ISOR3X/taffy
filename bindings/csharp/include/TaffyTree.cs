@@ -29,10 +29,11 @@ namespace Taffy
 
     /// <summary>
     /// Lightweight node identifier. Nodes are owned by a <see cref="TaffyTree"/>.
+    /// Record structs so equality members are generated automatically.
     /// </summary>
-    public readonly struct TaffyNode(TaffyNodeId id)
+    public readonly record struct TaffyNode(TaffyNodeId Id)
     {
-        internal TaffyNodeId Id { get; } = id;
+        internal TaffyNodeId Id { get; } = Id;
     }
 
     /// <summary>
