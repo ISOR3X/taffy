@@ -267,17 +267,6 @@ pub unsafe extern "C" fn TaffyTree_RemoveChild(
     })
 }
 
-/// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn TaffyTree_NewLeaf(raw_tree: TaffyTreeMutRef, style: TaffyStyleConstRef) -> TaffyNodeIdResult {
-    with_tree_mut!(raw_tree, tree, {
-        bail_if_null!(style, NullStylePointer);
-        let node_id = tree.inner.new_leaf((*(style as *const core::Style)).clone()).unwrap();
-        ok!(node_id.into());
-    })
-}
-
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn TaffyTree_NewWithChildren(
@@ -300,13 +289,12 @@ pub unsafe extern "C" fn TaffyTree_NewWithChildren(
     })
 }
 
-
-
 // -------------------------------------------------
 // Style and Layout access
 // -------------------------------------------------
 
-/// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+/// Get a mutable pointer to the style of a node. Writes through this pointer do NOT mark the
+/// node dirty — call TaffyTree_SetStyle afterwards to commit the change and trigger relayout.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn TaffyTree_GetStyleMut(
@@ -316,6 +304,22 @@ pub unsafe extern "C" fn TaffyTree_GetStyleMut(
     with_tree_mut!(raw_tree, tree, {
         let style = try_or!(InvalidNodeId, tree.inner.try_style_mut(node_id.into()));
         ok!(style as *mut core::Style as TaffyStyleMutRef);
+    })
+}
+
+/// Copy the style from the given pointer into the node and mark it dirty for relayout.
+/// Typically called after mutating the style via TaffyTree_GetStyleMut.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_SetStyle(
+    raw_tree: TaffyTreeMutRef,
+    node_id: TaffyNodeId,
+    style: TaffyStyleConstRef,
+) -> TaffyReturnCode {
+    with_tree_mut!(raw_tree, tree, {
+        bail_if_null!(style, NullStylePointer);
+        try_or!(InvalidNodeId, tree.inner.set_style(node_id.into(), (*(style as *const core::Style)).clone()));
+        ok!(TaffyReturnCode::Ok);
     })
 }
 
@@ -340,10 +344,7 @@ pub unsafe extern "C" fn TaffyTree_SetNodeContext(
 /// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn TaffyTree_GetLayout(
-    raw_tree: TaffyTreeConstRef,
-    node_id: TaffyNodeId,
-) -> TaffyLayoutResult {
+pub unsafe extern "C" fn TaffyTree_GetLayout(raw_tree: TaffyTreeConstRef, node_id: TaffyNodeId) -> TaffyLayoutResult {
     with_tree!(raw_tree, tree, {
         let layout = try_or!(InvalidNodeId, tree.inner.layout(node_id.into()));
         ok!(TaffyLayout {
@@ -362,10 +363,7 @@ pub unsafe extern "C" fn TaffyTree_GetLayout(
 /// Returns the number of children of the given node. Returns 0 if the node or tree pointer is invalid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn TaffyTree_ChildCount(
-    raw_tree: TaffyTreeConstRef,
-    parent_node_id: TaffyNodeId,
-) -> usize {
+pub unsafe extern "C" fn TaffyTree_ChildCount(raw_tree: TaffyTreeConstRef, parent_node_id: TaffyNodeId) -> usize {
     if raw_tree.is_null() {
         return 0;
     }

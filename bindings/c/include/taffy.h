@@ -626,8 +626,13 @@ struct TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyTreeMutRef raw_tree,
                                                    const struct TaffyNodeId *children,
                                                    uintptr_t children_len);
 
-// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+// Get a mutable pointer to the style of a node. Writes through this pointer do NOT mark the
+// node dirty — call TaffyTree_SetStyle afterwards to commit the change and trigger relayout.
 struct TaffyStyleMutRefResult TaffyTree_GetStyleMut(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id);
+
+// Copy the style from the given pointer into the node and mark it dirty for relayout.
+// Typically called after mutating the style via TaffyTree_GetStyleMut.
+enum TaffyReturnCode TaffyTree_SetStyle(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id, TaffyStyleConstRef style);
 
 // Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 enum TaffyReturnCode TaffyTree_SetNodeContext(TaffyTreeMutRef raw_tree,
