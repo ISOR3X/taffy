@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace Taffy
@@ -262,7 +261,7 @@ namespace Taffy
         // High-level API
         public TaffyEdges Inset
         {
-            get => new TaffyEdges(InsetTop, InsetRight, InsetBottom, InsetLeft);
+            get => new(InsetTop, InsetRight, InsetBottom, InsetLeft);
             set
             {
                 InsetTop = value.Top;
@@ -304,7 +303,7 @@ namespace Taffy
         // High-level API
         public TaffyEdges Margin
         {
-            get => new TaffyEdges(MarginTop, MarginRight, MarginBottom, MarginLeft);
+            get => new(MarginTop, MarginRight, MarginBottom, MarginLeft);
             set
             {
                 MarginTop = value.Top;
@@ -387,7 +386,7 @@ namespace Taffy
         // High-level API
         public TaffyEdges Border
         {
-            get => new TaffyEdges(BorderTop, BorderRight, BorderBottom, BorderLeft);
+            get => new(BorderTop, BorderRight, BorderBottom, BorderLeft);
             set
             {
                 BorderTop = value.Top;
@@ -416,7 +415,7 @@ namespace Taffy
         // High-level API
         public TaffyAxes Gap
         {
-            get => new TaffyAxes(ColumnGap, RowGap);
+            get => new(ColumnGap, RowGap);
             set
             {
                 ColumnGap = value.Width;
@@ -501,13 +500,12 @@ namespace Taffy
 
     /// <summary>
     /// Managed wrapper around a Taffy layout tree. Dispose to free native memory.
-    /// TContext is forced to be a struct so TContext? works as expected.
     /// <typeparam name="TContext">Per-node context type used during layout measurement.</typeparam>
     /// </summary>
-    public unsafe class TaffyTree<TContext> : IDisposable where TContext : struct
+    public unsafe class TaffyTree<TContext> : IDisposable where TContext : class
     {
         private TaffyNativeTree* _ptr;
-        private readonly Dictionary<ulong, TContext> _nodeContexts = new();
+        private readonly Dictionary<ulong, TContext> _nodeContexts = [];
 
         public TaffyTree()
         {
@@ -527,7 +525,7 @@ namespace Taffy
         }
 
         private TaffyNativeTree* Ptr =>
-            _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyTree<TContext>));
+            _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyTree<>));
 
         public TaffyNode NewNode()
         {
@@ -588,7 +586,7 @@ namespace Taffy
         /// Copies the style from <paramref name="style"/> into the node and marks it dirty for relayout.
         /// Call this after mutating a <see cref="TaffyStyleRef"/> obtained from <see cref="GetStyle"/>.
         /// </summary>
-        public unsafe void SetStyle(TaffyNode node, TaffyStyleRef style)
+        public void SetStyle(TaffyNode node, TaffyStyleRef style)
         {
             NativeMethods.TaffyTree_SetStyle(Ptr, node.Id, style.Ptr).ThrowIfError();
         }
@@ -736,15 +734,9 @@ namespace Taffy
     /// <summary>
     /// Convenience factory for setting rust-style `Size<LengthPercentageAuto>` properties easily.
     /// </summary>
-    public struct TaffyAxes
+    public struct TaffyAxes(TaffyDimension width, TaffyDimension height)
     {
-        public TaffyDimension Width, Height;
-
-        public TaffyAxes(TaffyDimension width, TaffyDimension height)
-        {
-            Width = width;
-            Height = height;
-        }
+        public TaffyDimension Width = width, Height = height;
 
         public TaffyAxes(TaffyDimension all) : this(all, all)
         {

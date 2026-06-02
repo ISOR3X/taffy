@@ -7,18 +7,18 @@ static class BasicExample
 {
     public static void Run()
     {
-        using var tree = new TaffyTree();
+        using var tree = new TaffyTree<NodeContext>();
 
         // Create child node and set styles
         var child = tree.NewNode();
         var childStyle = tree.GetStyle(child);
-        childStyle.Width  = Dimension.Percent(0.5f);
+        childStyle.Width = Dimension.Percent(0.5f);
         childStyle.Height = Dimension.Auto();
 
         // Create parent node and set styles
         var parent = tree.NewNode();
         var parentStyle = tree.GetStyle(parent);
-        parentStyle.Width  = Dimension.Px(100f);
+        parentStyle.Width = Dimension.Px(100f);
         parentStyle.Height = Dimension.Px(100f);
         parentStyle.JustifyContent = TaffyAlignContent.Center;
 
@@ -36,7 +36,7 @@ static class BasicExample
         tree.PrintTree(parent);
 
         // Inspect result
-        var childLayout  = tree.GetLayout(child);
+        var childLayout = tree.GetLayout(child);
         var parentLayout = tree.GetLayout(parent);
         Console.WriteLine($"\nParent layout: x={parentLayout.x} y={parentLayout.y} w={parentLayout.width} h={parentLayout.height}");
         Console.WriteLine($"Child  layout: x={childLayout.x}  y={childLayout.y}  w={childLayout.width}  h={childLayout.height}");
