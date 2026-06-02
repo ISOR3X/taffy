@@ -29,7 +29,7 @@ namespace Taffy
 
     /// <summary>
     /// Lightweight node identifier. Nodes are owned by a <see cref="TaffyTree"/>.
-    /// Record structs so equality members are generated automatically.
+    /// Record struct so equality members are generated automatically.
     /// </summary>
     public readonly record struct TaffyNode(TaffyNodeId Id)
     {
@@ -426,6 +426,8 @@ namespace Taffy
 
         #endregion
 
+        #region GRID
+
         // Grid template columns
         public int GridTemplateColumnsCount => (int)NativeMethods.TaffyStyle_GetGridTemplateColumnsCount(ptr);
 
@@ -474,6 +476,8 @@ namespace Taffy
                 NativeMethods.TaffyStyle_SetGridAutoRows(ptr, ptr1, (UIntPtr)tracks.Length).ThrowIfError();
         }
 
+        #endregion
+
         #region MISC
 
         public float? AspectRatio
@@ -497,15 +501,12 @@ namespace Taffy
 
     /// <summary>
     /// Managed wrapper around a Taffy layout tree. Dispose to free native memory.
+    /// <typeparam name="TContext">Per-node context type used during layout measurement.</typeparam>
     /// </summary>
-    public sealed unsafe class TaffyTree : IDisposable
+    public unsafe class TaffyTree<TContext> : IDisposable
     {
         private TaffyNativeTree* _ptr;
-
-        // ReSharper disable once CollectionNeverQueried.Local
-        // GC anchor: prevents collection of delegates held as raw function pointers by Rust
-        private readonly Dictionary<ulong, NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate>
-            _measureDelegates = new();
+        private readonly Dictionary<ulong, TContext> _nodeContexts = new();
 
         public TaffyTree()
         {
@@ -520,11 +521,12 @@ namespace Taffy
             {
                 NativeMethods.TaffyTree_Free(_ptr);
                 _ptr = null;
-                _measureDelegates.Clear();
+                _nodeContexts.Clear();
             }
         }
 
-        private TaffyNativeTree* Ptr => _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyTree));
+        private TaffyNativeTree* Ptr =>
+            _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyTree<TContext>));
 
         public TaffyNode NewNode()
         {
@@ -533,17 +535,26 @@ namespace Taffy
             return new TaffyNode(result.value);
         }
 
-        public void RemoveNode(TaffyNode node)
+        /// <summary>
+        /// Creates a leaf node with associated context data used during <see cref="ComputeLayoutWithMeasure"/>.
+        /// Does not call the rust `new_leaf_with_context` as C# manages its own context. 
+        /// </summary>
+        public TaffyNode NewLeafWithContext(TContext context)
         {
-            _measureDelegates.Remove(node.Id.Item1);
-            NativeMethods.TaffyTree_RemoveNode(Ptr, node.Id).ThrowIfError();
+            var result = NativeMethods.TaffyTree_NewNode(Ptr);
+            result.return_code.ThrowIfError();
+            var node = new TaffyNode(result.value);
+            _nodeContexts[node.Id.Item1] = context;
+            return node;
         }
 
-        public TaffyNode NewLeaf(TaffyStyleRef style)
+        public TContext? GetNodeContext(TaffyNode node) =>
+            _nodeContexts.TryGetValue(node.Id.Item1, out var ctx) ? ctx : default;
+
+        public void RemoveNode(TaffyNode node)
         {
-            var result = NativeMethods.TaffyTree_NewLeaf(Ptr, style.Ptr);
-            result.return_code.ThrowIfError();
-            return new TaffyNode(result.value);
+            _nodeContexts.Remove(node.Id.Item1);
+            NativeMethods.TaffyTree_RemoveNode(Ptr, node.Id).ThrowIfError();
         }
 
         public TaffyNode NewWithChildren(TaffyStyleRef style, TaffyNode[] children)
@@ -572,9 +583,40 @@ namespace Taffy
             return new TaffyStyleRef(result.value);
         }
 
+        /// <summary>
+        /// Copies the style from <paramref name="style"/> into the node and marks it dirty for relayout.
+        /// Call this after mutating a <see cref="TaffyStyleRef"/> obtained from <see cref="GetStyle"/>.
+        /// </summary>
+        public unsafe void SetStyle(TaffyNode node, TaffyStyleRef style)
+        {
+            NativeMethods.TaffyTree_SetStyle(Ptr, node.Id, style.Ptr).ThrowIfError();
+        }
+
         public void ComputeLayout(TaffyNode root, float availableWidth = float.PositiveInfinity,
             float availableHeight = float.PositiveInfinity) =>
             NativeMethods.TaffyTree_ComputeLayout(Ptr, root.Id, availableWidth, availableHeight).ThrowIfError();
+
+        /// <summary>
+        /// Compute layout, calling <paramref name="measureFn"/> for each leaf node that needs measurement.
+        /// The context previously stored via <see cref="NewLeafWithContext"/> is passed as the last argument.
+        /// </summary>
+        public void ComputeLayoutWithMeasure(
+            TaffyNode root,
+            float availableWidth,
+            float availableHeight,
+            Func<TaffyMeasureMode, float, TaffyMeasureMode, float, TContext?, TaffySize> measureFn)
+        {
+            NativeMethods.TaffyTree_ComputeLayoutWithMeasure_measure_function_delegate nativeDelegate =
+                (wm, w, hm, h, nodeId, _) =>
+                {
+                    _nodeContexts.TryGetValue(nodeId.Item1, out var ctx);
+                    return measureFn(wm, w, hm, h, ctx);
+                };
+            NativeMethods
+                .TaffyTree_ComputeLayoutWithMeasure(Ptr, root.Id, availableWidth, availableHeight, nativeDelegate)
+                .ThrowIfError();
+            GC.KeepAlive(nativeDelegate);
+        }
 
         public void PrintTree(TaffyNode root) =>
             NativeMethods.TaffyTree_PrintTree(Ptr, root.Id).ThrowIfError();
@@ -584,16 +626,6 @@ namespace Taffy
             var result = NativeMethods.TaffyTree_GetLayout(Ptr, node.Id);
             result.return_code.ThrowIfError();
             return result.value;
-        }
-
-        public void SetMeasureFunction(
-            TaffyNode node,
-            Func<TaffyMeasureMode, float, TaffyMeasureMode, float, TaffySize> measureFn)
-        {
-            NativeMethods.TaffyTree_SetNodeContext_measure_function_delegate nativeDelegate =
-                (wm, w, hm, h, _) => measureFn(wm, w, hm, h);
-            _measureDelegates[node.Id.Item1] = nativeDelegate;
-            NativeMethods.TaffyTree_SetNodeContext(Ptr, node.Id, nativeDelegate, null).ThrowIfError();
         }
 
         public int ChildCount(TaffyNode parent) =>
@@ -606,6 +638,11 @@ namespace Taffy
             return new TaffyNode(result.value);
         }
     }
+
+    /// <summary>
+    /// <see cref="TaffyTree{TContext}"/> without node context, for layouts that don't need custom measurement.
+    /// </summary>
+    public sealed class TaffyTree : TaffyTree<object>;
 
     /// <summary>
     /// Convenience factory for <see cref="TaffyDimension"/> values.

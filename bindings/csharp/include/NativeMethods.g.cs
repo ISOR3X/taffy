@@ -17,7 +17,7 @@ namespace Taffy
 
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate TaffySize TaffyTree_SetNodeContext_measure_function_delegate(TaffyMeasureMode width_measure_mode, float width, TaffyMeasureMode height_measure_mode, float height, void* context);
+        public delegate TaffySize TaffyTree_ComputeLayoutWithMeasure_measure_function_delegate(TaffyMeasureMode width_measure_mode, float width, TaffyMeasureMode height_measure_mode, float height, TaffyNodeId node_id, void* node_context);
 
 
 
@@ -34,10 +34,17 @@ namespace Taffy
         public static extern TaffyReturnCode TaffyTree_Free(TaffyNativeTree* raw_tree);
 
         /// <summary>
-        ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+        ///  Compute layout for a node tree without custom leaf measurement.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_ComputeLayout", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyReturnCode TaffyTree_ComputeLayout(TaffyNativeTree* raw_tree, TaffyNodeId node_id, float available_width, float available_height);
+
+        /// <summary>
+        ///  Compute layout for a node tree, calling `measure_function` for each leaf node that requires measurement.
+        ///  The measure function receives the node's id and the per-node context pointer set via TaffyTree_SetNodeContext.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_ComputeLayoutWithMeasure", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyReturnCode TaffyTree_ComputeLayoutWithMeasure(TaffyNativeTree* raw_tree, TaffyNodeId node_id, float available_width, float available_height, TaffyTree_ComputeLayoutWithMeasure_measure_function_delegate measure_function);
 
         /// <summary>
         ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
@@ -69,26 +76,28 @@ namespace Taffy
         [DllImport(__DllName, EntryPoint = "TaffyTree_RemoveChild", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyReturnCode TaffyTree_RemoveChild(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, TaffyNodeId child_node_id);
 
-        /// <summary>
-        ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
-        /// </summary>
-        [DllImport(__DllName, EntryPoint = "TaffyTree_NewLeaf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyNodeIdResult TaffyTree_NewLeaf(TaffyNativeTree* raw_tree, TaffyStyle* style);
-
         [DllImport(__DllName, EntryPoint = "TaffyTree_NewWithChildren", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyNativeTree* raw_tree, TaffyStyle* style, TaffyNodeId* children, System.UIntPtr children_len);
 
         /// <summary>
-        ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+        ///  Get a mutable pointer to the style of a node. Writes through this pointer do NOT mark the
+        ///  node dirty — call TaffyTree_SetStyle afterwards to commit the change and trigger relayout.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_GetStyleMut", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyStyleMutRefResult TaffyTree_GetStyleMut(TaffyNativeTree* raw_tree, TaffyNodeId node_id);
 
         /// <summary>
-        ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+        ///  Copy the style from the given pointer into the node and mark it dirty for relayout.
+        ///  Typically called after mutating the style via TaffyTree_GetStyleMut.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_SetStyle", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyReturnCode TaffyTree_SetStyle(TaffyNativeTree* raw_tree, TaffyNodeId node_id, TaffyStyle* style);
+
+        /// <summary>
+        ///  Set a per-node context pointer that will be passed to the measure function during TaffyTree_ComputeLayoutWithMeasure.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_SetNodeContext", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern TaffyReturnCode TaffyTree_SetNodeContext(TaffyNativeTree* raw_tree, TaffyNodeId node_id, TaffyTree_SetNodeContext_measure_function_delegate measure_function, void* context);
+        public static extern TaffyReturnCode TaffyTree_SetNodeContext(TaffyNativeTree* raw_tree, TaffyNodeId node_id, void* context);
 
         /// <summary>
         ///  Create a new Node in the TaffyTree. Returns a NodeId handle to the node.

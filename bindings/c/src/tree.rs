@@ -14,13 +14,13 @@ pub type TaffyMeasureFunction = extern "C" fn(
     width: f32,
     height_measure_mode: TaffyMeasureMode,
     height: f32,
-    context: *mut c_void,
+    node_id: TaffyNodeId,
+    node_context: *mut c_void,
 ) -> TaffySize;
 
 #[allow(dead_code)] // false positive
 struct NodeContext {
     context: *mut c_void,
-    measure_function: TaffyMeasureFunction,
 }
 
 pub struct TaffyTree {
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn TaffyTree_Free(raw_tree: TaffyTreeOwnedRef) -> TaffyRet
 // Compute and Print
 // -------------------------------------------------
 
-/// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+/// Compute layout for a node tree without custom leaf measurement.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn TaffyTree_ComputeLayout(
@@ -173,12 +173,33 @@ pub unsafe extern "C" fn TaffyTree_ComputeLayout(
             width: available_space_from_f32(available_width),
             height: available_space_from_f32(available_height),
         };
+        try_or!(InvalidNodeId, tree.inner.compute_layout(node_id.into(), available_space));
+        TaffyReturnCode::Ok
+    })
+}
+
+/// Compute layout for a node tree, calling `measure_function` for each leaf node that requires measurement.
+/// The measure function receives the node's id and the per-node context pointer set via TaffyTree_SetNodeContext.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_ComputeLayoutWithMeasure(
+    raw_tree: TaffyTreeMutRef,
+    node_id: TaffyNodeId,
+    available_width: f32,
+    available_height: f32,
+    measure_function: TaffyMeasureFunction,
+) -> TaffyReturnCode {
+    with_tree_mut!(raw_tree, tree, {
+        let available_space = core::Size {
+            width: available_space_from_f32(available_width),
+            height: available_space_from_f32(available_height),
+        };
         try_or!(
             InvalidNodeId,
             tree.inner.compute_layout_with_measure(
                 node_id.into(),
                 available_space,
-                |known_dimensions, available_space, _node_id, node_context, _style| {
+                |known_dimensions, available_space, node_id, node_context, _style| {
                     let (width, width_measure_mode) = match (known_dimensions.width, available_space.width) {
                         (Some(width), _) => (width, TaffyMeasureMode::Exact),
                         (None, AvailableSpace::Definite(width)) => (width, TaffyMeasureMode::FitContent),
@@ -191,12 +212,16 @@ pub unsafe extern "C" fn TaffyTree_ComputeLayout(
                         (None, AvailableSpace::MaxContent) => (f32::INFINITY, TaffyMeasureMode::MaxContent),
                         (None, AvailableSpace::MinContent) => (f32::INFINITY, TaffyMeasureMode::MinContent),
                     };
-                    match node_context {
-                        Some(NodeContext { measure_function, context }) => {
-                            measure_function(width_measure_mode, width, height_measure_mode, height, *context).into()
-                        }
-                        _ => core::Size::ZERO,
-                    }
+                    let node_context_ptr = node_context
+                        .map(|nc| nc.context)
+                        .unwrap_or(::core::ptr::null_mut());
+                    measure_function(
+                        width_measure_mode, width,
+                        height_measure_mode, height,
+                        node_id.into(),
+                        node_context_ptr,
+                    )
+                    .into()
                 }
             )
         );
@@ -323,19 +348,18 @@ pub unsafe extern "C" fn TaffyTree_SetStyle(
     })
 }
 
-/// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+/// Set a per-node context pointer that will be passed to the measure function during TaffyTree_ComputeLayoutWithMeasure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn TaffyTree_SetNodeContext(
     raw_tree: TaffyTreeMutRef,
     node_id: TaffyNodeId,
-    measure_function: TaffyMeasureFunction,
     context: *mut c_void,
 ) -> TaffyReturnCode {
     with_tree_mut!(raw_tree, tree, {
         try_or!(
             InvalidNodeId,
-            tree.inner.set_node_context(node_id.into(), Some(NodeContext { measure_function, context }))
+            tree.inner.set_node_context(node_id.into(), Some(NodeContext { context }))
         );
         ok!(TaffyReturnCode::Ok);
     })

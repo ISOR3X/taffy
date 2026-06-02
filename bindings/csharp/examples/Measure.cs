@@ -1,7 +1,11 @@
 // C# port of examples/measure.rs
-// Demonstrates nodes with custom measure functions (text wrapping and fixed-size images).
+// Demonstrates nodes with typed context and a single shared measure function.
 
 using Taffy;
+
+abstract record NodeContext;
+record TextContext(string Text) : NodeContext;
+record ImageContext(float Width, float Height) : NodeContext;
 
 static class MeasureExample
 {
@@ -13,78 +17,81 @@ static class MeasureExample
         "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
         "dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
 
-    private const float ImageNaturalWidth = 400f;
-    private const float ImageNaturalHeight = 300f;
+    private static TaffySize Measure(
+        TaffyMeasureMode widthMode, float width,
+        TaffyMeasureMode heightMode, float height,
+        NodeContext? context)
+        => context switch
+        {
+            TextContext text  => MeasureText(widthMode, width, text.Text),
+            ImageContext img  => MeasureImage(widthMode, width, heightMode, height, img),
+            _                => new TaffySize { width = 0, height = 0 },
+        };
+
+    private static TaffySize MeasureText(TaffyMeasureMode widthMode, float width, string text)
+    {
+        float availableWidth = widthMode is TaffyMeasureMode.Exact or TaffyMeasureMode.FitContent
+            ? width
+            : float.PositiveInfinity;
+
+        int charCount = text.Length;
+        int charsPerLine = float.IsInfinity(availableWidth)
+            ? charCount
+            : Math.Max(1, (int)(availableWidth / CharWidth));
+        int lines = (charCount + charsPerLine - 1) / charsPerLine;
+
+        return new TaffySize
+        {
+            width  = Math.Min(charCount * CharWidth, availableWidth),
+            height = lines * CharHeight,
+        };
+    }
+
+    private static TaffySize MeasureImage(
+        TaffyMeasureMode widthMode, float width,
+        TaffyMeasureMode heightMode, float height,
+        ImageContext img)
+    {
+        bool knownWidth  = widthMode  == TaffyMeasureMode.Exact;
+        bool knownHeight = heightMode == TaffyMeasureMode.Exact;
+
+        float w = knownWidth  ? width  : img.Width;
+        float h = knownHeight ? height : img.Height;
+
+        if (knownWidth  && !knownHeight) h = w * (img.Height / img.Width);
+        if (knownHeight && !knownWidth)  w = h * (img.Width  / img.Height);
+
+        return new TaffySize { width = w, height = h };
+    }
 
     public static void Run()
     {
-        using var tree = new TaffyTree();
+        using var tree = new TaffyTree<NodeContext>();
 
-        // --- Text node ---
-        // Wraps characters into lines based on available width, using fixed char dimensions.
-        var textNode = tree.NewNode();
-        tree.SetMeasureFunction(textNode, (widthMode, width, heightMode, height) =>
-        {
-            float availableWidth = widthMode == TaffyMeasureMode.Exact ? width
-                                 : widthMode == TaffyMeasureMode.FitContent ? width
-                                 : float.PositiveInfinity;
+        var textNode  = tree.NewLeafWithContext(new TextContext(LoremIpsum));
+        var imageNode = tree.NewLeafWithContext(new ImageContext(400f, 300f));
 
-            int charCount = LoremIpsum.Length;
-            int charsPerLine = float.IsInfinity(availableWidth)
-                ? charCount
-                : Math.Max(1, (int)(availableWidth / CharWidth));
-            int lines = (charCount + charsPerLine - 1) / charsPerLine;
-
-            return new TaffySize
-            {
-                width = Math.Min(charCount * CharWidth, availableWidth),
-                height = lines * CharHeight,
-            };
-        });
-
-        // --- Image node ---
-        // Returns natural dimensions, preserving aspect ratio when only one axis is constrained.
-        var imageNode = tree.NewNode();
-        tree.SetMeasureFunction(imageNode, (widthMode, width, heightMode, height) =>
-        {
-            bool knownWidth = widthMode == TaffyMeasureMode.Exact;
-            bool knownHeight = heightMode == TaffyMeasureMode.Exact;
-
-            float w = knownWidth ? width : ImageNaturalWidth;
-            float h = knownHeight ? height : ImageNaturalHeight;
-
-            if (knownWidth && !knownHeight)
-                h = w * (ImageNaturalHeight / ImageNaturalWidth);
-            else if (knownHeight && !knownWidth)
-                w = h * (ImageNaturalWidth / ImageNaturalHeight);
-
-            return new TaffySize { width = w, height = h };
-        });
-
-        // --- Root container (flex column, fixed width, auto height) ---
-        // NewWithChildren clones the style from an existing node's style pointer, so we
-        // configure a temporary node, then promote it to the root with its children attached.
-        var tempRoot = tree.NewNode();
+        // Configure root style via a temporary node, then promote it with children attached.
+        var tempRoot  = tree.NewNode();
         var rootStyle = tree.GetStyle(tempRoot);
-        rootStyle.Display = TaffyDisplay.Flex;
+        rootStyle.Display       = TaffyDisplay.Flex;
         rootStyle.FlexDirection = TaffyFlexDirection.Column;
-        rootStyle.Width = Dimension.Px(200f);
-        rootStyle.Height = Dimension.Auto();
+        rootStyle.Width         = Dimension.Px(200f);
+        rootStyle.Height        = Dimension.Auto();
 
         var root = tree.NewWithChildren(rootStyle, [textNode, imageNode]);
         tree.RemoveNode(tempRoot);
 
-        // Compute layout and print
         Console.WriteLine("\nCompute layout with infinite viewport:");
-        tree.ComputeLayout(root);
+        tree.ComputeLayoutWithMeasure(root, float.PositiveInfinity, float.PositiveInfinity, Measure);
         tree.PrintTree(root);
 
         Console.WriteLine("\nCompute layout with 100x100 viewport:");
-        tree.ComputeLayout(root, 100f, 100f);
+        tree.ComputeLayoutWithMeasure(root, 100f, 100f, Measure);
         tree.PrintTree(root);
 
-        var rootLayout = tree.GetLayout(root);
-        var textLayout = tree.GetLayout(textNode);
+        var rootLayout  = tree.GetLayout(root);
+        var textLayout  = tree.GetLayout(textNode);
         var imageLayout = tree.GetLayout(imageNode);
 
         Console.WriteLine($"Root:  x={rootLayout.x}  y={rootLayout.y}  w={rootLayout.width}  h={rootLayout.height}");
