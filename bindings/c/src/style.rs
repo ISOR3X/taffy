@@ -512,3 +512,20 @@ pub unsafe extern "C" fn TaffyStyle_SetGridAutoRows(
         }
     })
 }
+
+/// Allocate a standalone TaffyStyle with default values.
+/// Must be freed with `TaffyStyle_Free` when no longer needed.
+#[no_mangle]
+pub extern "C" fn TaffyStyle_New() -> TaffyStyleMutRef {
+    let style: core::Style = core::Style::default();
+    Box::into_raw(Box::new(style)) as TaffyStyleMutRef
+}
+
+/// Free a TaffyStyle previously allocated with `TaffyStyle_New`.
+/// Passing a null pointer is a no-op.
+#[no_mangle]
+pub unsafe extern "C" fn TaffyStyle_Free(raw_style: TaffyStyleMutRef) {
+    if !raw_style.is_null() {
+        drop(Box::from_raw(raw_style as *mut core::Style));
+    }
+}

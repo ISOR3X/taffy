@@ -645,6 +645,39 @@ namespace Taffy
     }
 
     /// <summary>
+    /// An owned, heap-allocated style that lives independently of any node.
+    /// Mirrors Rust's <c>Style</c> struct — create once, apply to many nodes via
+    /// <see cref="TaffyTree{TContext}.SetStyle(TaffyNode, TaffyStyleOwned)"/> or implicit cast to <see cref="TaffyStyleRef"/>.
+    /// Dispose when done to free native memory.
+    /// </summary>
+    public unsafe sealed class TaffyStyleOwned : IDisposable
+    {
+        private TaffyStyle* _ptr;
+
+        public TaffyStyleOwned(Action<TaffyStyleRef>? configure = null)
+        {
+            _ptr = NativeMethods.TaffyStyle_New();
+            if (_ptr == null)
+                throw new OutOfMemoryException("TaffyStyle_New returned null");
+            configure?.Invoke(new TaffyStyleRef(_ptr));
+        }
+
+        public void Dispose()
+        {
+            if (_ptr != null)
+            {
+                NativeMethods.TaffyStyle_Free(_ptr);
+                _ptr = null;
+            }
+        }
+
+        internal TaffyStyle* Ptr =>
+            _ptr != null ? _ptr : throw new ObjectDisposedException(nameof(TaffyStyleOwned));
+
+        public static implicit operator TaffyStyleRef(TaffyStyleOwned s) => new(s.Ptr);
+    }
+
+    /// <summary>
     /// Convenience factory for <see cref="TaffyDimension"/> values.
     /// </summary>
     public static class Dimension

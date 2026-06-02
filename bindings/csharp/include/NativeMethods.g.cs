@@ -231,6 +231,20 @@ namespace Taffy
         [DllImport(__DllName, EntryPoint = "TaffyStyle_SetGridAutoRows", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyReturnCode TaffyStyle_SetGridAutoRows(TaffyStyle* raw_style, TaffyTrackSizingFunction* tracks, System.UIntPtr count);
 
+        /// <summary>
+        ///  Allocate a standalone TaffyStyle with default values.
+        ///  Must be freed with `TaffyStyle_Free` when no longer needed.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyStyle_New", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyStyle* TaffyStyle_New();
+
+        /// <summary>
+        ///  Free a TaffyStyle previously allocated with `TaffyStyle_New`.
+        ///  Passing a null pointer is a no-op.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyStyle_Free", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void TaffyStyle_Free(TaffyStyle* raw_style);
+
         [DllImport(__DllName, EntryPoint = "TaffyStyle_GetDisplay", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern TaffyDisplay TaffyStyle_GetDisplay(TaffyStyle* _raw_style);
 
