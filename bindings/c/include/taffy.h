@@ -321,16 +321,6 @@ typedef struct TaffyNodeId {
   uint64_t _0;
 } TaffyNodeId;
 
-typedef struct TaffyNodeIdResult {
-  enum TaffyReturnCode return_code;
-  struct TaffyNodeId value;
-} TaffyNodeIdResult;
-
-typedef struct TaffyStyleMutRefResult {
-  enum TaffyReturnCode return_code;
-  TaffyStyleMutRef value;
-} TaffyStyleMutRefResult;
-
 typedef struct TaffySize {
   float width;
   float height;
@@ -340,7 +330,18 @@ typedef struct TaffySize (*TaffyMeasureFunction)(enum TaffyMeasureMode width_mea
                                                  float width,
                                                  enum TaffyMeasureMode height_measure_mode,
                                                  float height,
-                                                 void *context);
+                                                 struct TaffyNodeId node_id,
+                                                 void *node_context);
+
+typedef struct TaffyNodeIdResult {
+  enum TaffyReturnCode return_code;
+  struct TaffyNodeId value;
+} TaffyNodeIdResult;
+
+typedef struct TaffyStyleMutRefResult {
+  enum TaffyReturnCode return_code;
+  TaffyStyleMutRef value;
+} TaffyStyleMutRefResult;
 
 typedef struct TaffyLayout {
   float x;
@@ -593,11 +594,19 @@ TaffyTreeOwnedRef TaffyTree_New(void);
 // Free a TaffyTree instance
 enum TaffyReturnCode TaffyTree_Free(TaffyTreeOwnedRef raw_tree);
 
-// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
+// Compute layout for a node tree without custom leaf measurement.
 enum TaffyReturnCode TaffyTree_ComputeLayout(TaffyTreeMutRef raw_tree,
                                              struct TaffyNodeId node_id,
                                              float available_width,
                                              float available_height);
+
+// Compute layout for a node tree, calling `measure_function` for each leaf node that requires measurement.
+// The measure function receives the node's id and the per-node context pointer set via TaffyTree_SetNodeContext.
+enum TaffyReturnCode TaffyTree_ComputeLayoutWithMeasure(TaffyTreeMutRef raw_tree,
+                                                        struct TaffyNodeId node_id,
+                                                        float available_width,
+                                                        float available_height,
+                                                        TaffyMeasureFunction measure_function);
 
 // Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 enum TaffyReturnCode TaffyTree_PrintTree(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id);
@@ -618,9 +627,6 @@ enum TaffyReturnCode TaffyTree_RemoveChild(TaffyTreeMutRef raw_tree,
                                            struct TaffyNodeId parent_node_id,
                                            struct TaffyNodeId child_node_id);
 
-// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
-struct TaffyNodeIdResult TaffyTree_NewLeaf(TaffyTreeMutRef raw_tree, TaffyStyleConstRef style);
-
 struct TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyTreeMutRef raw_tree,
                                                    TaffyStyleConstRef style,
                                                    const struct TaffyNodeId *children,
@@ -634,11 +640,8 @@ struct TaffyStyleMutRefResult TaffyTree_GetStyleMut(TaffyTreeMutRef raw_tree, st
 // Typically called after mutating the style via TaffyTree_GetStyleMut.
 enum TaffyReturnCode TaffyTree_SetStyle(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id, TaffyStyleConstRef style);
 
-// Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
-enum TaffyReturnCode TaffyTree_SetNodeContext(TaffyTreeMutRef raw_tree,
-                                              struct TaffyNodeId node_id,
-                                              TaffyMeasureFunction measure_function,
-                                              void *context);
+// Set a per-node context pointer that will be passed to the measure function during TaffyTree_ComputeLayoutWithMeasure.
+enum TaffyReturnCode TaffyTree_SetNodeContext(TaffyTreeMutRef raw_tree, struct TaffyNodeId node_id, void *context);
 
 // Create a new Node in the TaffyTree. Returns a NodeId handle to the node.
 struct TaffyLayoutResult TaffyTree_GetLayout(TaffyTreeConstRef raw_tree, struct TaffyNodeId node_id);

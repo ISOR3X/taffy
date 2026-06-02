@@ -501,9 +501,10 @@ namespace Taffy
 
     /// <summary>
     /// Managed wrapper around a Taffy layout tree. Dispose to free native memory.
+    /// TContext is forced to be a struct so TContext? works as expected.
     /// <typeparam name="TContext">Per-node context type used during layout measurement.</typeparam>
     /// </summary>
-    public unsafe class TaffyTree<TContext> : IDisposable
+    public unsafe class TaffyTree<TContext> : IDisposable where TContext : struct
     {
         private TaffyNativeTree* _ptr;
         private readonly Dictionary<ulong, TContext> _nodeContexts = new();
@@ -537,7 +538,7 @@ namespace Taffy
 
         /// <summary>
         /// Creates a leaf node with associated context data used during <see cref="ComputeLayoutWithMeasure"/>.
-        /// Does not call the rust `new_leaf_with_context` as C# manages its own context. 
+        /// Does not call the rust `new_leaf_with_context` as C# manages its own context.
         /// </summary>
         public TaffyNode NewLeafWithContext(TContext context)
         {
@@ -638,11 +639,6 @@ namespace Taffy
             return new TaffyNode(result.value);
         }
     }
-
-    /// <summary>
-    /// <see cref="TaffyTree{TContext}"/> without node context, for layouts that don't need custom measurement.
-    /// </summary>
-    public sealed class TaffyTree : TaffyTree<object>;
 
     /// <summary>
     /// Convenience factory for <see cref="TaffyDimension"/> values.
