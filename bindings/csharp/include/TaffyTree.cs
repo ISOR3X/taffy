@@ -549,6 +549,15 @@ namespace Taffy
             return node;
         }
 
+        /// <summary>
+        /// Updates the context for an existing node and marks it dirty so layout is recomputed.
+        /// </summary>
+        public void SetNodeContext(TaffyNode node, TContext context)
+        {
+            _nodeContexts[node.Id.Item1] = context;
+            NativeMethods.TaffyTree_SetNodeContext(Ptr, node.Id, null).ThrowIfError();
+        }
+
         public TContext? GetNodeContext(TaffyNode node) =>
             _nodeContexts.TryGetValue(node.Id.Item1, out var ctx) ? ctx : default;
 
