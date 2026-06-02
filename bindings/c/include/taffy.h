@@ -357,6 +357,11 @@ typedef struct TaffyLayoutResult {
 
 typedef const struct TaffyTree *TaffyTreeConstRef;
 
+typedef struct TaffyOptionalNodeId {
+  bool has_value;
+  struct TaffyNodeId value;
+} TaffyOptionalNodeId;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -648,6 +653,9 @@ struct TaffyLayoutResult TaffyTree_GetLayout(TaffyTreeConstRef raw_tree, struct 
 
 // Returns the number of children of the given node. Returns 0 if the node or tree pointer is invalid.
 uintptr_t TaffyTree_ChildCount(TaffyTreeConstRef raw_tree, struct TaffyNodeId parent_node_id);
+
+// Returns the parent NodeId of the given node, or has_value=false if the node has no parent
+struct TaffyOptionalNodeId TaffyTree_GetParent(TaffyTreeConstRef raw_tree, struct TaffyNodeId node_id);
 
 // Returns the child NodeId at the given index under parent_node_id
 struct TaffyNodeIdResult TaffyTree_ChildAt(TaffyTreeConstRef raw_tree,

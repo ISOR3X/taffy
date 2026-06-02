@@ -610,7 +610,7 @@ namespace Taffy
             NativeMethods.TaffyTree_ComputeLayoutWithMeasure_measure_function_delegate nativeDelegate =
                 (wm, w, hm, h, nodeId, _) =>
                 {
-                    _nodeContexts.TryGetValue(nodeId.Item1, out var ctx);
+                    TContext? ctx = _nodeContexts.TryGetValue(nodeId.Item1, out var found) ? found : null;
                     return measureFn(wm, w, hm, h, ctx);
                 };
             NativeMethods
@@ -627,6 +627,12 @@ namespace Taffy
             var result = NativeMethods.TaffyTree_GetLayout(Ptr, node.Id);
             result.return_code.ThrowIfError();
             return result.value;
+        }
+
+        public TaffyNode? GetParent(TaffyNode node)
+        {
+            var result = NativeMethods.TaffyTree_GetParent(Ptr, node.Id);
+            return result.has_value ? new TaffyNode(result.value) : null;
         }
 
         public int ChildCount(TaffyNode parent) =>

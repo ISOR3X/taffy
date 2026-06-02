@@ -112,6 +112,12 @@ namespace Taffy
         public static extern System.UIntPtr TaffyTree_ChildCount(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id);
 
         /// <summary>
+        ///  Returns the parent NodeId of the given node, or has_value=false if the node has no parent
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_GetParent", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyOptionalNodeId TaffyTree_GetParent(TaffyNativeTree* raw_tree, TaffyNodeId node_id);
+
+        /// <summary>
         ///  Returns the child NodeId at the given index under parent_node_id
         /// </summary>
         [DllImport(__DllName, EntryPoint = "TaffyTree_ChildAt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -545,6 +551,13 @@ namespace Taffy
     public unsafe partial struct TaffyNodeIdResult
     {
         public TaffyReturnCode return_code;
+        public TaffyNodeId value;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe partial struct TaffyOptionalNodeId
+    {
+        [MarshalAs(UnmanagedType.U1)] public bool has_value;
         public TaffyNodeId value;
     }
 

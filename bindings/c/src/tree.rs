@@ -70,6 +70,12 @@ impl TaffyFFIResult for TaffyNodeIdResult {
 }
 
 #[repr(C)]
+pub struct TaffyOptionalNodeId {
+    pub has_value: bool,
+    pub value: TaffyNodeId,
+}
+
+#[repr(C)]
 pub struct TaffyStyleMutRefResult {
     pub return_code: TaffyReturnCode,
     pub value: TaffyStyleMutRef,
@@ -393,6 +399,23 @@ pub unsafe extern "C" fn TaffyTree_ChildCount(raw_tree: TaffyTreeConstRef, paren
     }
     let tree = &*raw_tree;
     tree.inner.children(parent_node_id.into()).map(|c| c.len()).unwrap_or(0)
+}
+
+/// Returns the parent NodeId of the given node, or has_value=false if the node has no parent
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_GetParent(
+    raw_tree: TaffyTreeConstRef,
+    node_id: TaffyNodeId,
+) -> TaffyOptionalNodeId {
+    if raw_tree.is_null() {
+        return TaffyOptionalNodeId { has_value: false, value: TaffyNodeId(0) };
+    }
+    let tree = &*raw_tree;
+    match tree.inner.parent(node_id.into()) {
+        Some(parent_id) => TaffyOptionalNodeId { has_value: true, value: parent_id.into() },
+        None => TaffyOptionalNodeId { has_value: false, value: TaffyNodeId(0) },
+    }
 }
 
 /// Returns the child NodeId at the given index under parent_node_id
