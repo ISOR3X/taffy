@@ -23,9 +23,9 @@ static class MeasureExample
         NodeContext? context)
         => context switch
         {
-            TextContext text  => MeasureText(widthMode, width, text.Text),
-            ImageContext img  => MeasureImage(widthMode, width, heightMode, height, img),
-            _                => new TaffySize { width = 0, height = 0 },
+            TextContext text => MeasureText(widthMode, width, text.Text),
+            ImageContext img => MeasureImage(widthMode, width, heightMode, height, img),
+            _ => new TaffySize { width = 0, height = 0 },
         };
 
     private static TaffySize MeasureText(TaffyMeasureMode widthMode, float width, string text)
@@ -42,7 +42,7 @@ static class MeasureExample
 
         return new TaffySize
         {
-            width  = Math.Min(charCount * CharWidth, availableWidth),
+            width = Math.Min(charCount * CharWidth, availableWidth),
             height = lines * CharHeight,
         };
     }
@@ -52,14 +52,14 @@ static class MeasureExample
         TaffyMeasureMode heightMode, float height,
         ImageContext img)
     {
-        bool knownWidth  = widthMode  == TaffyMeasureMode.Exact;
+        bool knownWidth = widthMode == TaffyMeasureMode.Exact;
         bool knownHeight = heightMode == TaffyMeasureMode.Exact;
 
-        float w = knownWidth  ? width  : img.Width;
+        float w = knownWidth ? width : img.Width;
         float h = knownHeight ? height : img.Height;
 
-        if (knownWidth  && !knownHeight) h = w * (img.Height / img.Width);
-        if (knownHeight && !knownWidth)  w = h * (img.Width  / img.Height);
+        if (knownWidth && !knownHeight) h = w * (img.Height / img.Width);
+        if (knownHeight && !knownWidth) w = h * (img.Width / img.Height);
 
         return new TaffySize { width = w, height = h };
     }
@@ -68,16 +68,16 @@ static class MeasureExample
     {
         using var tree = new TaffyTree<NodeContext>();
 
-        var textNode  = tree.NewLeafWithContext(new TextContext(LoremIpsum));
+        var textNode = tree.NewLeafWithContext(new TextContext(LoremIpsum));
         var imageNode = tree.NewLeafWithContext(new ImageContext(400f, 300f));
 
         // Configure root style via a temporary node, then promote it with children attached.
-        var tempRoot  = tree.NewNode();
+        var tempRoot = tree.NewNode();
         var rootStyle = tree.GetStyle(tempRoot);
-        rootStyle.Display       = TaffyDisplay.Flex;
+        rootStyle.Display = TaffyDisplay.Flex;
         rootStyle.FlexDirection = TaffyFlexDirection.Column;
-        rootStyle.Width         = Dimension.Px(200f);
-        rootStyle.Height        = Dimension.Auto();
+        rootStyle.Width = Dimension.Px(200f);
+        rootStyle.Height = Dimension.Auto();
 
         var root = tree.NewWithChildren(rootStyle, [textNode, imageNode]);
         tree.RemoveNode(tempRoot);
@@ -90,8 +90,8 @@ static class MeasureExample
         tree.ComputeLayoutWithMeasure(root, 100f, 100f, Measure);
         tree.PrintTree(root);
 
-        var rootLayout  = tree.GetLayout(root);
-        var textLayout  = tree.GetLayout(textNode);
+        var rootLayout = tree.GetLayout(root);
+        var textLayout = tree.GetLayout(textNode);
         var imageLayout = tree.GetLayout(imageNode);
 
         Console.WriteLine($"Root:  x={rootLayout.x}  y={rootLayout.y}  w={rootLayout.width}  h={rootLayout.height}");
