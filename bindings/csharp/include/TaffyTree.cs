@@ -36,6 +36,49 @@ namespace Taffy
     }
 
     /// <summary>
+    /// Override the IEquatable related methods to speed up comparison of nodes.
+    /// This directly uses the inner <c>ulong</c> for comparison.
+    /// </summary>
+    public partial struct TaffyNodeId : IEquatable<TaffyNodeId>
+    {
+        public readonly bool Equals(TaffyNodeId other) => Item1 == other.Item1;
+        public override readonly bool Equals(object? obj) => obj is TaffyNodeId o && Equals(o);
+        public override int GetHashCode() => Item1.GetHashCode();
+    }
+
+    /// <summary>
+    /// Typed equality for the generated value structs. Without these, any comparison falls back to
+    /// <see cref="ValueType.Equals(object)"/>, which boxes, and <c>Nullable</c> gets no lifted
+    /// <c>==</c>. Equality is field-wise; a value is compared even for units that ignore it (e.g. Auto).
+    /// </summary>
+    public partial struct TaffyDimension : IEquatable<TaffyDimension>
+    {
+        public readonly bool Equals(TaffyDimension other) => unit == other.unit && value == other.value;
+        public override readonly bool Equals(object? obj) => obj is TaffyDimension o && Equals(o);
+        public override readonly int GetHashCode() => unchecked(((int)unit * 397) ^ value.GetHashCode());
+        public static bool operator ==(TaffyDimension left, TaffyDimension right) => left.Equals(right);
+        public static bool operator !=(TaffyDimension left, TaffyDimension right) => !left.Equals(right);
+    }
+
+    public partial struct TaffyGridPlacement : IEquatable<TaffyGridPlacement>
+    {
+        public readonly bool Equals(TaffyGridPlacement other) => start == other.start && end == other.end && span == other.span;
+        public override readonly bool Equals(object? obj) => obj is TaffyGridPlacement o && Equals(o);
+        public override readonly int GetHashCode() => unchecked((start * 397 ^ end) * 397 ^ span);
+        public static bool operator ==(TaffyGridPlacement left, TaffyGridPlacement right) => left.Equals(right);
+        public static bool operator !=(TaffyGridPlacement left, TaffyGridPlacement right) => !left.Equals(right);
+    }
+
+    public partial struct TaffyTrackSizingFunction : IEquatable<TaffyTrackSizingFunction>
+    {
+        public readonly bool Equals(TaffyTrackSizingFunction other) => min == other.min && max == other.max;
+        public override readonly bool Equals(object? obj) => obj is TaffyTrackSizingFunction o && Equals(o);
+        public override readonly int GetHashCode() => unchecked(min.GetHashCode() * 397 ^ max.GetHashCode());
+        public static bool operator ==(TaffyTrackSizingFunction left, TaffyTrackSizingFunction right) => left.Equals(right);
+        public static bool operator !=(TaffyTrackSizingFunction left, TaffyTrackSizingFunction right) => !left.Equals(right);
+    }
+
+    /// <summary>
     /// Borrowed mutable reference to a node's style. Valid only while the owning
     /// <see cref="TaffyTree"/> is alive and no structural tree mutation has occurred.
     /// Do not store beyond the current scope.
@@ -738,50 +781,40 @@ namespace Taffy
     /// <summary>
     /// Convenience factory for setting rust-style `Rect<LengthPercentageAuto>` properties easily.
     /// </summary>
-    public struct TaffyEdges
+    public struct TaffyEdges(TaffyDimension top, TaffyDimension right, TaffyDimension bottom, TaffyDimension left) : IEquatable<TaffyEdges>
     {
-        public TaffyDimension Top, Right, Bottom, Left;
+        public TaffyDimension Top = top, Right = right, Bottom = bottom, Left = left;
 
-        public TaffyEdges(TaffyDimension top, TaffyDimension right, TaffyDimension bottom, TaffyDimension left)
-        {
-            Top = top;
-            Right = right;
-            Bottom = bottom;
-            Left = left;
-        }
+        public readonly bool Equals(TaffyEdges other) => Top == other.Top && Right == other.Right && Bottom == other.Bottom && Left == other.Left;
+        public override readonly bool Equals(object? obj) => obj is TaffyEdges o && Equals(o);
+        public override readonly int GetHashCode() => unchecked(((Top.GetHashCode() * 397 ^ Right.GetHashCode()) * 397 ^ Bottom.GetHashCode()) * 397 ^ Left.GetHashCode());
+        public static bool operator ==(TaffyEdges left, TaffyEdges right) => left.Equals(right);
+        public static bool operator !=(TaffyEdges left, TaffyEdges right) => !left.Equals(right);
 
         public TaffyEdges(TaffyDimension all) : this(all, all, all, all)
         {
         }
 
-        public TaffyEdges(TaffyEdge edge, TaffyDimension value)
+        public TaffyEdges(TaffyDimension row, TaffyDimension column) : this(row, column, row, column)
         {
-            var zero = new TaffyDimension { value = 0, unit = TaffyUnit.Length };
-            Top = Right = Bottom = Left = zero;
-            switch (edge)
-            {
-                case TaffyEdge.Top: Top = value; break;
-                case TaffyEdge.Bottom: Bottom = value; break;
-                case TaffyEdge.Left: Left = value; break;
-                case TaffyEdge.Right: Right = value; break;
-                case TaffyEdge.Vertical: Top = Bottom = value; break;
-                case TaffyEdge.Horizontal: Left = Right = value; break;
-                case TaffyEdge.All: Top = Right = Bottom = Left = value; break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(edge), edge, null);
-            }
         }
     }
 
     /// <summary>
     /// Convenience factory for setting rust-style `Size<LengthPercentageAuto>` properties easily.
     /// </summary>
-    public struct TaffyAxes(TaffyDimension width, TaffyDimension height)
+    public struct TaffyAxes(TaffyDimension width, TaffyDimension height) : IEquatable<TaffyAxes>
     {
         public TaffyDimension Width = width, Height = height;
 
         public TaffyAxes(TaffyDimension all) : this(all, all)
         {
         }
+
+        public readonly bool Equals(TaffyAxes other) => Width == other.Width && Height == other.Height;
+        public override readonly bool Equals(object? obj) => obj is TaffyAxes o && Equals(o);
+        public override readonly int GetHashCode() => unchecked(Width.GetHashCode() * 397 ^ Height.GetHashCode());
+        public static bool operator ==(TaffyAxes left, TaffyAxes right) => left.Equals(right);
+        public static bool operator !=(TaffyAxes left, TaffyAxes right) => !left.Equals(right);
     }
 }
