@@ -621,6 +621,30 @@ namespace Taffy
             }
         }
 
+        /// <summary>
+        /// Replaces all children of <paramref name="parent"/> with <paramref name="children"/>, in order.
+        /// Reorders in one call and marks the parent dirty once, unlike repeated
+        /// <see cref="RemoveChild"/> / <see cref="AppendChild"/>.
+        /// Nodes keep their identity, style and context. Children dropped from the list are detached
+        /// but not freed - the caller still owns them and must call <see cref="RemoveNode"/> to release them.
+        /// </summary>
+        public void SetChildren(TaffyNode parent, TaffyNode[] children)
+        {
+            if (children.Length == 0)
+            {
+                NativeMethods.TaffyTree_SetChildren(Ptr, parent.Id, null, UIntPtr.Zero).ThrowIfError();
+                return;
+            }
+
+            var ids = new TaffyNodeId[children.Length];
+            for (int i = 0; i < children.Length; i++)
+                ids[i] = children[i].Id;
+            fixed (TaffyNodeId* pIds = ids)
+            {
+                NativeMethods.TaffyTree_SetChildren(Ptr, parent.Id, pIds, (UIntPtr)ids.Length).ThrowIfError();
+            }
+        }
+
         public void AppendChild(TaffyNode parent, TaffyNode child) =>
             NativeMethods.TaffyTree_AppendChild(Ptr, parent.Id, child.Id).ThrowIfError();
 

@@ -320,6 +320,34 @@ pub unsafe extern "C" fn TaffyTree_NewWithChildren(
     })
 }
 
+/// Replace all children of `parent_node_id` with `children`, in the given order.
+///
+/// Unlike repeated TaffyTree_RemoveChild / TaffyTree_AppendChild this reorders in one pass and
+/// marks the parent dirty once. Nodes present in `children` keep their identity, style and
+/// context; nodes that are dropped are detached but NOT freed, so the caller still owns them and
+/// must call TaffyTree_RemoveNode to release them.
+///
+/// Passing a null or empty `children` detaches every child.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn TaffyTree_SetChildren(
+    raw_tree: TaffyTreeMutRef,
+    parent_node_id: TaffyNodeId,
+    children: *const TaffyNodeId,
+    children_len: usize,
+) -> TaffyReturnCode {
+    with_tree_mut!(raw_tree, tree, {
+        let child_ids: Vec<core::NodeId> = if children.is_null() || children_len == 0 {
+            Vec::new()
+        } else {
+            let slice = ::core::slice::from_raw_parts(children, children_len);
+            slice.iter().map(|c| core::NodeId::new(c.0)).collect()
+        };
+        try_or!(InvalidNodeId, tree.inner.set_children(parent_node_id.into(), &child_ids));
+        ok!(TaffyReturnCode::Ok);
+    })
+}
+
 // -------------------------------------------------
 // Style and Layout access
 // -------------------------------------------------

@@ -80,6 +80,19 @@ namespace Taffy
         public static extern TaffyNodeIdResult TaffyTree_NewWithChildren(TaffyNativeTree* raw_tree, TaffyStyle* style, TaffyNodeId* children, System.UIntPtr children_len);
 
         /// <summary>
+        ///  Replace all children of `parent_node_id` with `children`, in the given order.
+        ///
+        ///  Unlike repeated TaffyTree_RemoveChild / TaffyTree_AppendChild this reorders in one pass and
+        ///  marks the parent dirty once. Nodes present in `children` keep their identity, style and
+        ///  context; nodes that are dropped are detached but NOT freed, so the caller still owns them and
+        ///  must call TaffyTree_RemoveNode to release them.
+        ///
+        ///  Passing a null or empty `children` detaches every child.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "TaffyTree_SetChildren", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern TaffyReturnCode TaffyTree_SetChildren(TaffyNativeTree* raw_tree, TaffyNodeId parent_node_id, TaffyNodeId* children, System.UIntPtr children_len);
+
+        /// <summary>
         ///  Get a mutable pointer to the style of a node. Writes through this pointer do NOT mark the
         ///  node dirty — call TaffyTree_SetStyle afterwards to commit the change and trigger relayout.
         /// </summary>
