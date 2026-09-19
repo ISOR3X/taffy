@@ -513,6 +513,24 @@ namespace Taffy
         public float y;
         public float width;
         public float height;
+        /// <summary>
+        ///  Width of the content inside the node. Larger than `width` when the content overflows,
+        ///  which is what a scrollable node needs to size its scrollable area.
+        /// </summary>
+        public float content_width;
+        /// <summary>
+        ///  Height of the content inside the node. See `content_width`.
+        /// </summary>
+        public float content_height;
+        /// <summary>
+        ///  Horizontal space reserved for a vertical scrollbar. Zero unless `overflow_y` is `Scroll`,
+        ///  so this is the resolved gutter rather than an echo of `scrollbar_width` from the style.
+        /// </summary>
+        public float scrollbar_width;
+        /// <summary>
+        ///  Vertical space reserved for a horizontal scrollbar. See `scrollbar_width`.
+        /// </summary>
+        public float scrollbar_height;
     }
 
     [StructLayout(LayoutKind.Sequential)]

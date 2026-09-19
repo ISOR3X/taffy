@@ -102,7 +102,7 @@ pub struct TaffyLayoutResult {
 }
 impl TaffyFFIDefault for TaffyLayoutResult {
     fn default() -> Self {
-        Self { return_code: TaffyReturnCode::Ok, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0 } }
+        Self { return_code: TaffyReturnCode::Ok, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0, content_width: 0.0, content_height: 0.0, scrollbar_width: 0.0, scrollbar_height: 0.0 } }
     }
 }
 impl TaffyFFIResult for TaffyLayoutResult {
@@ -111,7 +111,7 @@ impl TaffyFFIResult for TaffyLayoutResult {
         Self { return_code: TaffyReturnCode::Ok, value }
     }
     fn from_return_code(return_code: TaffyReturnCode) -> Self {
-        Self { return_code, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0 } }
+        Self { return_code, value: TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0, content_width: 0.0, content_height: 0.0, scrollbar_width: 0.0, scrollbar_height: 0.0 } }
     }
 }
 
@@ -381,7 +381,11 @@ pub unsafe extern "C" fn TaffyTree_GetLayout(raw_tree: TaffyTreeConstRef, node_i
             x: layout.location.x,
             y: layout.location.y,
             width: layout.size.width,
-            height: layout.size.height
+            height: layout.size.height,
+            content_width: layout.content_size.width,
+            content_height: layout.content_size.height,
+            scrollbar_width: layout.scrollbar_size.width,
+            scrollbar_height: layout.scrollbar_size.height
         });
     })
 }

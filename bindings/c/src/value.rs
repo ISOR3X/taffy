@@ -78,10 +78,20 @@ pub struct TaffyLayout {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    /// Width of the content inside the node. Larger than `width` when the content overflows,
+    /// which is what a scrollable node needs to size its scrollable area.
+    pub content_width: f32,
+    /// Height of the content inside the node. See `content_width`.
+    pub content_height: f32,
+    /// Horizontal space reserved for a vertical scrollbar. Zero unless `overflow_y` is `Scroll`,
+    /// so this is the resolved gutter rather than an echo of `scrollbar_width` from the style.
+    pub scrollbar_width: f32,
+    /// Vertical space reserved for a horizontal scrollbar. See `scrollbar_width`.
+    pub scrollbar_height: f32,
 }
 impl TaffyFFIDefault for TaffyLayout {
     fn default() -> Self {
-        TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }
+        TaffyLayout { x: 0.0, y: 0.0, width: 0.0, height: 0.0, content_width: 0.0, content_height: 0.0, scrollbar_width: 0.0, scrollbar_height: 0.0 }
     }
 }
 
